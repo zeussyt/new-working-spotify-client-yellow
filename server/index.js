@@ -87,10 +87,15 @@ app.get("/auth/login", async (req, res) => {
   const codeVerifier = await generateCodeVerifier();
 
   const uri = await client.authorizationCode.getAuthorizeUri({
-    redirectUri: process.env.SC_REDIRECT_URI,
-    codeVerifier,
-    scope: scope, 
-  });
+  redirectUri: process.env.SC_REDIRECT_URI,
+  codeVerifier,
+  scope: [
+    "user-read-email",
+    "user-read-private",
+    "user-library-read",
+    "playlist-read-private"
+  ].join(" ")
+});
 
   codeVerifierGlobal = codeVerifier;
 
