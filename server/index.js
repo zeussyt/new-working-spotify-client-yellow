@@ -83,7 +83,7 @@ app.use(session({
 });
 POSSIBLE FIX? */ 
 
-app.get("/auth/login", async (req, res) => {
+/*app.get("/auth/login", async (req, res) => {
   const codeVerifier = await generateCodeVerifier();
 
   const uri = await client.authorizationCode.getAuthorizeUri({
@@ -100,6 +100,39 @@ app.get("/auth/login", async (req, res) => {
   codeVerifierGlobal = codeVerifier;
 
   res.redirect("https://new-working-spotify-client-yellow.vercel.app");
+});
+BRING BACK IF SOMETHING BREAKS */
+
+app.get("/auth/login", async (req, res) => {
+  try {
+    const codeVerifier = await generateCodeVerifier();
+
+    const scope = [
+      "user-read-email",
+      "user-read-private",
+      "user-library-read",
+      "playlist-read-private",
+      "playlist-read-collaborative",
+      "user-top-read"
+    ].join(" ");
+
+    const uri = await client.authorizationCode.getAuthorizeUri({
+      redirectUri: process.env.SC_REDIRECT_URI,
+      codeVerifier,
+      scope: scope
+    });
+
+    codeVerifierGlobal = codeVerifier;
+
+    return res.redirect(uri);
+
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({
+      error: "Auth login failed",
+      details: err.message
+    });
+  }
 });
 
 app.get("/debug/token", (req, res) => {
