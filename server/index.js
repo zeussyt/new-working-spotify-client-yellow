@@ -43,7 +43,8 @@ app.listen(PORT, "0.0.0.0", () => {
 
 // ================= LOGIN =================
 const client = new OAuth2Client({
-  server: "https://api.spotify.com",
+  // maybe change back to server: "https://api.spotify.com"
+  server: "https://accounts.spotify.com" ,
   authorizationEndpoint: process.env.SC_AUTHORIZATION_URL,
   tokenEndpoint: process.env.SC_TOKEN_URL,
   clientId: process.env.SC_CLIENT_ID,
@@ -114,7 +115,7 @@ app.get("/auth/login", async (req, res) => {
       "playlist-read-private",
       "playlist-read-collaborative",
       "user-top-read"
-    ].join(" ");
+    ]
 
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
