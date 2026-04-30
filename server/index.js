@@ -55,6 +55,8 @@ const client = new OAuth2Client({
 
 const redirectUri = process.env.SC_REDIRECT_URI;
 
+
+app.set("trust proxy", 1);
 app.use(session({
   store: new FileStoreSession({
     path: "./sessions",
@@ -64,8 +66,9 @@ app.use(session({
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,        // REQUIRED for HTTPS (Render)
-    sameSite: "none",    // REQUIRED for cross-site (Vercel ↔ Render)
+    secure: true,        // MUST be true in production HTTPS
+    sameSite: "none",    // CRITICAL for cross-site login
+    maxAge: 86400000
   }
 }));
 
