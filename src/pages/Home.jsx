@@ -2,6 +2,7 @@ import { useEffect, useState, useRef } from "react";
 import Search from "../components/Search";
 import Results from "../components/Results";
 import Library from "../pages/Library";
+const API = import.meta.env.VITE_API_URL;
 
 export default function Home() {
     const [tracks, setTracks] = useState([]);
@@ -18,8 +19,10 @@ export default function Home() {
 
     const [currentPreview, setCurrentPreview] = useState(null);
 
+    
+
     useEffect(() => {
-        fetch("/api/me", { credentials: "include" })
+        fetch(`${API}/api/me`, { credentials: "include" })
             .then(res => {
                 if (res.ok) setIsLoggedIn(true);
             });
@@ -28,10 +31,9 @@ export default function Home() {
     async function handleSearch(query) {
         setLoading(true);
         try {
-            const res = await fetch(
-                `/api/search?q=${encodeURIComponent(query)}`,
-                { credentials: "include" }
-            );
+            const res = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}`, {
+                credentials: "include"
+            });
 
             const data = await res.json();
             setTracks(data);
@@ -57,7 +59,7 @@ export default function Home() {
 
     async function handleLogout() {
         try {
-            await fetch("/auth/logout", {
+            await fetch(`${API}/auth/logout`, {
                 method: "POST",
                 credentials: "include"
             });
@@ -74,7 +76,7 @@ export default function Home() {
 
     async function loadPlaylists() {
         try {
-            const res = await fetch("/api/playlists", { credentials: "include" });
+            const res = await fetch(`${API}/api/playlists`, { credentials: "include" });
             const data = await res.json();
             setPlaylists(data);
         } catch (err) { console.error(err); }
@@ -82,7 +84,7 @@ export default function Home() {
 
     async function loadLibrary() {
         try {
-            const res = await fetch("/api/library", { credentials: "include" });
+            const res = await fetch(`${API}/api/library`, { credentials: "include" });
             const data = await res.json();
             setLibrary(data);
         } catch (err) { console.error(err); }
@@ -90,7 +92,7 @@ export default function Home() {
 
     async function loadAiPlaylists() {
         try {
-            const res = await fetch("/api/ai-playlists", { credentials: "include" });
+            const res = await fetch(`${API}/api/ai-playlists`, { credentials: "include" });
             const data = await res.json();
             setAiPlaylists(data);
         } catch (err) { console.error(err); }
@@ -109,7 +111,7 @@ export default function Home() {
             <div style={styles.loginContainer}>
                 <h1 style={styles.logo}>Spotify Clone</h1>
                 <p style={styles.subtitle}>Connect to your music</p>
-                <a href="/auth/login">
+               <a href={`${API}/auth/login`}>
                     <button style={styles.loginButton}>Login with Spotify</button>
                 </a>
             </div>

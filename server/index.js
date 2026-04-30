@@ -128,7 +128,7 @@ app.get("/auth/callback", async (req, res) => {
         return res.status(500).send("Session error");
       }
 
-      res.redirect("http://127.0.0.1:5173");
+      res.redirect("https://new-working-spotify-client-yellow.vercel.app");
     });
 
   } catch (error) {
