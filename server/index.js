@@ -30,8 +30,8 @@ const scope = [
 const app = express();
 let accessToken = null;
 app.use(cors({
-  origin: "http://127.0.0.1:5173",
-  credentials: true  
+  origin: "https://new-working-spotify-client-yellow.vercel.app",
+  credentials: true
 }));
 app.use(express.json());
 const FileStoreSession = FileStore(session);
@@ -57,14 +57,14 @@ const redirectUri = process.env.SC_REDIRECT_URI;
 app.use(session({
   store: new FileStoreSession({
     path: "./sessions",
-    ttl: 86400,
+    ttl: 86000,
   }),
   secret: "meoasudhfa41242",
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: false,
-    sameSite: "lax",   
+    secure: true,
+    sameSite: "none",
     maxAge: 86400000
   }
 }));
@@ -94,7 +94,7 @@ app.get("/auth/login", async (req, res) => {
 
   codeVerifierGlobal = codeVerifier;
 
-  res.redirect(uri);
+  res.redirect("https://new-working-spotify-client-yellow.vercel.app");
 });
 
 app.get("/debug/token", (req, res) => {

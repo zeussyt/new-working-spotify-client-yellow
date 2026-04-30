@@ -12,9 +12,7 @@ export default function Library({ playTrack }) {
         setLoading(true);
 
         try {
-            const res = await fetch("/api/library", {
-                credentials: "include"
-            });
+            const res = await fetch(`${API}/api/library`, { credentials: "include" })
 
             const data = await res.json();
 
