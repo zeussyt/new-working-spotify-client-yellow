@@ -22,11 +22,19 @@ export default function Home() {
     
 
     useEffect(() => {
-        fetch(`${API}/api/me`, { credentials: "include" })
-            .then(res => {
-                if (res.ok) setIsLoggedIn(true);
-            });
-    }, []);
+    fetch(`${API}/api/me`, { credentials: "include" })
+        .then(res => {
+            if (res.ok) {
+                setIsLoggedIn(true);
+            } else {
+                setIsLoggedIn(false);
+            }
+        })
+        .catch(err => {
+            console.error("Auth check failed:", err);
+            setIsLoggedIn(false);
+        });
+}, []);
 
     async function handleSearch(query) {
         setLoading(true);

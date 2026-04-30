@@ -58,15 +58,14 @@ const redirectUri = process.env.SC_REDIRECT_URI;
 app.use(session({
   store: new FileStoreSession({
     path: "./sessions",
-    ttl: 86000,
+    ttl: 86400,
   }),
   secret: "meoasudhfa41242",
   resave: false,
   saveUninitialized: false,
   cookie: {
-    secure: true,
-    sameSite: "none",
-    maxAge: 86400000
+    secure: true,        // REQUIRED for HTTPS (Render)
+    sameSite: "none",    // REQUIRED for cross-site (Vercel ↔ Render)
   }
 }));
 
