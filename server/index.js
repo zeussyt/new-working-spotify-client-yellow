@@ -6,15 +6,7 @@ import { generateCodeVerifier, OAuth2Client } from "@badgateway/oauth2-client";
 import fs from "fs";
 import session from "express-session";
 import FileStore from 'session-file-store'
-let codeVerifierGlobal = null; //need to store this in session storage
-
-//const raw = fs.readFileSync(".env");
-//console.log("Raw bytes:", raw);
-//console.log("As string:", raw.toString());
-//console.log("CWD:", process.cwd());
-
-dotenv.config({ path: "./.env" });
-console.log("CLIENT ID:", process.env.SC_CLIENT_ID);
+//let codeVerifierGlobal = null; //need to store this in session storage
 
 const scope = [
     "user-read-email",
@@ -27,6 +19,30 @@ const scope = [
     "user-modify-playback-state",
     "streaming"
 ];
+
+app.get("/auth/login", async (req, res) => {
+  const codeVerifier = await generateCodeVerifier();
+
+  req.session.codeVerifier = codeVerifier; 
+
+  const uri = await client.authorizationCode.getAuthorizeUri({
+    redirectUri: process.env.SC_REDIRECT_URI,
+    codeVerifier,
+    scope,
+  });
+
+  res.redirect(uri);
+});
+
+//const raw = fs.readFileSync(".env");
+//console.log("Raw bytes:", raw);
+//console.log("As string:", raw.toString());
+//console.log("CWD:", process.cwd());
+
+dotenv.config({ path: "./.env" });
+console.log("CLIENT ID:", process.env.SC_CLIENT_ID);
+
+
 const app = express();
 let accessToken = null;
 app.use(cors({
@@ -122,7 +138,7 @@ app.get("/auth/login", async (req, res) => {
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
       codeVerifier,
-      scope: scope
+      scope
     });
 
     codeVerifierGlobal = codeVerifier;
@@ -154,7 +170,7 @@ app.get("/auth/callback", async (req, res) => {
       fullRedirectUrl,
       {
         redirectUri: process.env.SC_REDIRECT_URI,
-        codeVerifier: codeVerifierGlobal,
+        codeVerifier: req.session.codeVerifier
       }
     );
 
