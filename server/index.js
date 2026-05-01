@@ -12,7 +12,7 @@ const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 //let codeVerifierGlobal = null; //need to store this in session storage
 const app = express();
 
-const scope = [
+/*const scope = [
     "user-read-email",
     "user-read-private",
     "user-library-read",
@@ -23,6 +23,7 @@ const scope = [
     "user-modify-playback-state",
     "streaming"
 ];
+*/
 
 app.get("/auth/login", async (req, res) => {
   const codeVerifier = await generateCodeVerifier();
