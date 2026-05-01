@@ -66,7 +66,7 @@ export default function Home() {
                     }
                 }
             );
-
+            /* Possible fix for non-array responses from server 
            const data = await res.json();
             setTracks(Array.isArray(data) ? data : []);
         } catch (err) {
@@ -75,7 +75,17 @@ export default function Home() {
             setLoading(false);
         }
     }
+*/
 
+const data = await res.json();
+
+// 🚨 defensive fix
+if (!Array.isArray(data)) {
+    console.error("Invalid search response:", data);
+    setTracks([]);
+} else {
+    setTracks(data);
+}
     function playPreview(url) {
         if (!url) return;
 
