@@ -148,7 +148,7 @@ app.get("/auth/callback", async (req, res) => {
       path: "/"
     });
 
-    return res.redirect(process.env.FRONTEND_URL);
+    return res.redirect(process.env.SC_REDIRECT_URI);
 
   } catch (error) {
     console.error("AUTH CALLBACK ERROR:", error.response?.data || error);
