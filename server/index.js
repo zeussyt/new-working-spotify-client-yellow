@@ -7,6 +7,7 @@ import fs from "fs";
 import session from "express-session";
 import FileStore from 'session-file-store'
 //let codeVerifierGlobal = null; //need to store this in session storage
+const app = express();
 
 const scope = [
     "user-read-email",
@@ -43,7 +44,7 @@ dotenv.config({ path: "./.env" });
 console.log("CLIENT ID:", process.env.SC_CLIENT_ID);
 
 
-const app = express();
+
 let accessToken = null;
 app.use(cors({
   origin: "https://new-working-spotify-client-yellow.vercel.app",
