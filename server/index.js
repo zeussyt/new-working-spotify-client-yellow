@@ -167,6 +167,9 @@ app.get("/api/me", auth, (req, res) => {
 // ================= SEARCH =================
 
 app.get("/api/search", auth, async (req, res) => {
+  console.log("=== SEARCH HIT ===");
+  console.log("AUTH HEADER:", req.headers.authorization);
+  console.log("JWT ACCESS TOKEN:", req.accessToken);
   const query = req.query.q;
 
   try {
@@ -183,10 +186,6 @@ app.get("/api/search", auth, async (req, res) => {
         }
       }
     );
-
-    console.log("AUTH HEADER:", req.headers.authorization);
-    console.log("ACCESS TOKEN:", req.accessToken);
-
     res.json(response.data.tracks.items);
 
   } catch (err) {
