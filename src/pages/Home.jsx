@@ -69,20 +69,7 @@ export default function Home() {
         }
     }
 
-    function auth(req, res, next) {
-    const header = req.headers.authorization;
-
-    if (!header) return res.status(401).json({ error: "No token" });
-
-    try {
-        const token = header.split(" ")[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.accessToken = decoded.accessToken;
-        next();
-    } catch (err) {
-        return res.status(401).json({ error: "Invalid token" });
-    }
-}
+    
 
     function playPreview(url) {
         if (!url) return;
@@ -164,6 +151,7 @@ export default function Home() {
                 <h1 style={styles.logo}>Spotify Clone</h1>
                 <p style={styles.subtitle}>Connect to your music</p>
                <a href={`${API}/auth/login`}>
+               console.log("LOGIN URL:", `${API}/auth/login`);
                     <button style={styles.loginButton}>Login with Spotify</button>
                 </a>
             </div>
