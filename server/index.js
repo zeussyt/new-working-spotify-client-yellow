@@ -115,25 +115,56 @@ app.get("/auth/callback", async (req, res) => {
     `${req.protocol}://${req.get("host")}${req.originalUrl}`;
 
   try {
+    const codeVerifier = req.cookies.code_verifier;
+
+    if (!codeVerifier) {
+      console.error("Missing code_verifier cookie");
+      return res.status(400).json({ error: "Missing verifier" });
+    }
+
     const tokenSet = await client.authorizationCode.getTokenFromCodeRedirect(
       fullRedirectUrl,
       {
         redirectUri: process.env.SC_REDIRECT_URI,
+        codeVerifier,
       }
     );
 
-    const jwtToken = jwt.sign(
-      { accessToken: tokenSet.accessToken },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
+    const accessToken = tokenSet.accessToken;
 
-    // store JWT in secure cookie
+    const jwtToken = jwt.sign({ accessToken }, JWT_SECRET, {
+      expiresIn: "7d",
+    });
+
     res.cookie("token", jwtToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
     });
+
+    return res.redirect(
+      "https://new-working-spotify-client-yellow.vercel.app"
+    );
+
+  } catch (error) {
+    console.error("FULL AUTH ERROR:", error.response?.data || error);
+    return res.status(500).json({ error: "Authentication failed" });
+  }
+});
+
+    // store JWT in secure cookie
+    /*res.cookie("token", jwtToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+    });
+    */
+  res.cookie("code_verifier", codeVerifier, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  path: "/"
+});
 
     return res.redirect(process.env.FRONTEND_URL);
 
