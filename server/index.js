@@ -85,22 +85,17 @@ app.get("/auth/login", async (req, res) => {
 
     const codeVerifier = await generateCodeVerifier();
 
-    // store verifier in secure cookie (CRITICAL FIX)
-    res.cookie("token", jwtToken, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
-  path: "/"
-});
-
-console.log("COOKIE SET SUCCESSFULLY");
-
-return res.redirect(process.env.FRONTEND_URL + "?login=success");
+    res.cookie("code_verifier", codeVerifier, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/"
+    });
 
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
       codeVerifier,
-      scope: scope, // IMPORTANT FIX
+      scope
     });
 
     console.log("AUTH URL GENERATED");
