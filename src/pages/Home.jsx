@@ -8,7 +8,6 @@ export default function Home() {
     const [tracks, setTracks] = useState([]);
     const [loading, setLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
-
     const [activeTab, setActiveTab] = useState("search");
 
     const [playlists, setPlaylists] = useState([]);
@@ -16,6 +15,18 @@ export default function Home() {
     const [aiPlaylists, setAiPlaylists] = useState([]);
 
     const audioRef = useRef(null);
+
+    // ================= TOKEN HANDLER =================
+    useEffect(() => {
+        const params = new URLSearchParams(window.location.search);
+        const token = params.get("token");
+
+        if (token) {
+            localStorage.setItem("token", token);
+            window.history.replaceState({}, document.title, "/");
+            setIsLoggedIn(true);
+        }
+    }, []);
 
     // ================= AUTH CHECK =================
     useEffect(() => {
@@ -31,7 +42,14 @@ export default function Home() {
                 Authorization: `Bearer ${token}`
             }
         })
-            .then(res => setIsLoggedIn(res.ok))
+            .then(res => {
+                if (res.ok) {
+                    setIsLoggedIn(true);
+                } else {
+                    localStorage.removeItem("token");
+                    setIsLoggedIn(false);
+                }
+            })
             .catch(() => setIsLoggedIn(false));
     }, []);
 
@@ -68,11 +86,13 @@ export default function Home() {
     }
 
     // ================= LOGOUT =================
-    async function handleLogout() {
-        await fetch(`${API}/auth/logout`, { method: "POST" });
-
+    function handleLogout() {
         localStorage.removeItem("token");
         setIsLoggedIn(false);
+        setTracks([]);
+        setPlaylists([]);
+        setLibrary([]);
+        setAiPlaylists([]);
     }
 
     // ================= DATA LOADERS =================
@@ -116,12 +136,12 @@ export default function Home() {
         return (
             <div style={styles.loginPage}>
                 <div style={styles.loginCard}>
-                    <div style={styles.logo}>Spotify Clone</div>
-                    <p style={styles.subtitle}>Music for everything you do</p>
+                    <h1 style={styles.logo}>Spotify Clone</h1>
+                    <p style={styles.subtitle}>Connect to your music</p>
 
                     <a href={`${API}/auth/login`} style={styles.loginLink}>
                         <button style={styles.loginButton}>
-                            Continue with Spotify
+                            Login with Spotify
                         </button>
                     </a>
                 </div>
@@ -145,7 +165,6 @@ export default function Home() {
     return (
         <div style={styles.app}>
 
-            {/* HEADER */}
             <div style={styles.header}>
                 <div style={styles.brand}>🎵 Spotify Clone</div>
 
@@ -154,7 +173,6 @@ export default function Home() {
                 </button>
             </div>
 
-            {/* TABS */}
             <div style={styles.tabs}>
                 <TabButton label="Search" tab="search" />
                 <TabButton label="Playlists" tab="playlists" />
@@ -162,13 +180,11 @@ export default function Home() {
                 <TabButton label="AI Mix" tab="ai" />
             </div>
 
-            {/* CONTENT */}
             <div style={styles.content}>
 
                 {activeTab === "search" && (
                     <>
                         <Search onSearch={handleSearch} />
-
                         {loading && <div style={styles.loading}>Loading...</div>}
 
                         <div style={styles.grid}>
@@ -232,7 +248,7 @@ export default function Home() {
     );
 }
 
-/* ================= STYLES ================= */
+// ================= STYLES =================
 const styles = {
     app: {
         minHeight: "100vh",
@@ -241,20 +257,14 @@ const styles = {
         fontFamily: "Arial",
         padding: "20px"
     },
-
     header: {
         display: "flex",
         justifyContent: "space-between",
         alignItems: "center",
-        paddingBottom: "10px",
-        borderBottom: "1px solid #222"
+        borderBottom: "1px solid #222",
+        paddingBottom: "10px"
     },
-
-    brand: {
-        color: "#1DB954",
-        fontWeight: "bold"
-    },
-
+    brand: { color: "#1DB954", fontWeight: "bold" },
     logout: {
         background: "transparent",
         border: "1px solid #1DB954",
@@ -263,30 +273,14 @@ const styles = {
         borderRadius: "20px",
         cursor: "pointer"
     },
-
-    tabs: {
-        display: "flex",
-        gap: "10px",
-        margin: "15px 0"
-    },
-
+    tabs: { display: "flex", gap: "10px", margin: "15px 0" },
     tab: {
         padding: "8px 14px",
         borderRadius: "20px",
         border: "1px solid #1DB954",
         cursor: "pointer"
     },
-
-    content: {
-        padding: "10px"
-    },
-
-    grid: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px"
-    },
-
+    grid: { display: "flex", flexDirection: "column", gap: "10px" },
     card: {
         display: "flex",
         alignItems: "center",
@@ -295,26 +289,10 @@ const styles = {
         padding: "10px",
         borderRadius: "10px"
     },
-
-    img: {
-        width: "45px",
-        height: "45px",
-        borderRadius: "6px"
-    },
-
-    info: {
-        flex: 1
-    },
-
-    title: {
-        fontWeight: "bold"
-    },
-
-    artist: {
-        fontSize: "12px",
-        color: "#aaa"
-    },
-
+    img: { width: "45px", height: "45px", borderRadius: "6px" },
+    info: { flex: 1 },
+    title: { fontWeight: "bold" },
+    artist: { fontSize: "12px", color: "#aaa" },
     play: {
         background: "#1DB954",
         border: "none",
@@ -323,46 +301,31 @@ const styles = {
         height: "32px",
         cursor: "pointer"
     },
-
     playlistGrid: {
         display: "grid",
         gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
         gap: "12px"
     },
-
     playlistCard: {
         background: "#181818",
         padding: "10px",
         borderRadius: "10px"
     },
-
     playlistImg: {
         width: "100%",
         height: "120px",
         objectFit: "cover",
         borderRadius: "8px"
     },
-
-    playlistName: {
-        marginTop: "8px"
-    },
-
+    playlistName: { marginTop: "8px" },
     aiCard: {
         background: "#181818",
         padding: "10px",
         borderRadius: "10px",
         marginTop: "10px"
     },
-
-    section: {
-        color: "#1DB954"
-    },
-
-    loading: {
-        color: "#aaa",
-        marginBottom: "10px"
-    },
-
+    section: { color: "#1DB954" },
+    loading: { color: "#aaa" },
     loginPage: {
         height: "100vh",
         display: "flex",
@@ -370,22 +333,9 @@ const styles = {
         alignItems: "center",
         background: "linear-gradient(#000, #121212)"
     },
-
-    loginCard: {
-        textAlign: "center"
-    },
-
-    logo: {
-        fontSize: "32px",
-        color: "#1DB954",
-        fontWeight: "bold"
-    },
-
-    subtitle: {
-        color: "#aaa",
-        marginBottom: "20px"
-    },
-
+    loginCard: { textAlign: "center" },
+    logo: { fontSize: "32px", color: "#1DB954" },
+    subtitle: { color: "#aaa", marginBottom: "20px" },
     loginButton: {
         background: "#1DB954",
         border: "none",
@@ -394,8 +344,5 @@ const styles = {
         fontWeight: "bold",
         cursor: "pointer"
     },
-
-    loginLink: {
-        textDecoration: "none"
-    }
+    loginLink: { textDecoration: "none" }
 };

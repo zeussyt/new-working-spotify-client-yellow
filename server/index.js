@@ -137,6 +137,8 @@ app.get("/auth/callback", async (req, res) => {
       JWT_SECRET,
       { expiresIn: "7d" }
     );
+//possible cookie fix
+    return res.redirect(`${process.env.FRONTEND_URL}?token=${jwtToken}`);
 
     res.cookie("token", jwtToken, {
       httpOnly: true,
