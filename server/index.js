@@ -1,272 +1,224 @@
-import express from "express";
-import axios from "axios";
-import cors from "cors";
-import dotenv from "dotenv";
-import { generateCodeVerifier, OAuth2Client } from "@badgateway/oauth2-client";
-import jwt from "jsonwebtoken";
-import cookieParser from "cookie-parser";
+import { useState, useRef } from "react";
+import Search from "../components/Search";
+import Library from "../pages/Library";
 
-dotenv.config({ path: "./.env" });
+const API = import.meta.env.VITE_API_URL;
 
-const scope = [
-  "user-read-email",
-  "user-read-private",
-  "user-library-read",
-  "playlist-read-private",
-  "playlist-read-collaborative",
-  "user-top-read",
-  "user-read-playback-state",
-  "user-modify-playback-state",
-  "streaming"
-];
+export default function Home() {
+    const [tracks, setTracks] = useState([]);
+    const [loading, setLoading] = useState(false);
+    const [isLoggedIn, setIsLoggedIn] = useState(false);
+    const [activeTab, setActiveTab] = useState("search");
 
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
+    const audioRef = useRef(null);
 
-const app = express();
+    // ================= AUTH CHECK =================
+    async function checkLogin() {
+        try {
+            const res = await fetch(`${API}/api/me`, {
+                credentials: "include"
+            });
 
-// ================= MIDDLEWARE =================
-
-const allowedOrigins = [
-  "https://new-working-spotify-client-yellow.vercel.app",
-  "https://new-working-spotify-client-yellow-gcmr3ljbx.vercel.app"
-];
-
-app.use(cors({
-  origin: function (origin, callback) {
-    if (!origin || allowedOrigins.includes(origin)) {
-      callback(null, true);
-    } else {
-      callback(new Error("Not allowed by CORS"));
+            setIsLoggedIn(res.ok);
+        } catch {
+            setIsLoggedIn(false);
+        }
     }
-  },
-  credentials: true
-}));
 
-app.use(express.json());
-app.use(cookieParser());
+    // optional: check on load
+    useState(() => {
+        checkLogin();
+    }, []);
 
-// ================= DEBUG =================
+    // ================= LOGIN REDIRECT =================
+    function handleLogin() {
+        window.location.href = `${API}/auth/login`;
+    }
 
-process.on("unhandledRejection", err => {
-  console.error("UNHANDLED REJECTION:", err);
-});
+    // ================= SEARCH =================
+    async function handleSearch(query) {
+        setLoading(true);
 
-process.on("uncaughtException", err => {
-  console.error("UNCAUGHT EXCEPTION:", err);
-});
+        try {
+            const res = await fetch(
+                `${API}/api/search?q=${encodeURIComponent(query)}`,
+                { credentials: "include" }
+            );
 
-// ================= OAUTH CLIENT =================
+            const data = await res.json();
+            setTracks(data || []);
+        } catch (err) {
+            console.error(err);
+        } finally {
+            setLoading(false);
+        }
+    }
 
-const client = new OAuth2Client({
-  server: "https://accounts.spotify.com",
-  authorizationEndpoint: process.env.SC_AUTHORIZATION_URL,
-  tokenEndpoint: process.env.SC_TOKEN_URL,
-  clientId: process.env.SC_CLIENT_ID,
-  clientSecret: process.env.SC_CLIENT_SECRET,
-  redirectUri: process.env.SC_REDIRECT_URI,
-  pkce: true,
-});
+    function playPreview(url) {
+        if (!url) return;
 
-// ================= AUTH MIDDLEWARE =================
+        if (audioRef.current) audioRef.current.pause();
 
-function auth(req, res, next) {
-  try {
-    const token =
-      req.cookies?.token ||
-      req.headers.authorization?.split(" ")[1] ||
-      req.query.token;
+        const audio = new Audio(url);
+        audioRef.current = audio;
+        audio.play();
+    }
 
-    if (!token) return res.status(401).json({ loggedIn: false });
+    const TabButton = ({ label, tab }) => (
+        <button
+            onClick={() => setActiveTab(tab)}
+            style={{
+                ...styles.tab,
+                backgroundColor: activeTab === tab ? "#1DB954" : "transparent",
+                color: activeTab === tab ? "#000" : "#fff"
+            }}
+        >
+            {label}
+        </button>
+    );
 
-    const decoded = jwt.verify(token, JWT_SECRET);
-    req.accessToken = decoded.accessToken;
+    // ================= LOGIN SCREEN =================
+    if (!isLoggedIn) {
+        return (
+            <div style={styles.container}>
+                <h1 style={styles.title}>Spotify Clone</h1>
+                <p style={styles.text}>Connect your Spotify account</p>
 
-    next();
-  } catch (err) {
-    return res.status(401).json({ loggedIn: false });
-  }
+                <button style={styles.button} onClick={handleLogin}>
+                    Login with Spotify
+                </button>
+            </div>
+        );
+    }
+
+    // ================= APP =================
+    return (
+        <div style={styles.app}>
+
+            <div style={styles.header}>
+                <h2 style={styles.logo}>Spotify Clone</h2>
+            </div>
+
+            <div style={styles.tabs}>
+                <TabButton label="Search" tab="search" />
+                <TabButton label="Library" tab="library" />
+            </div>
+
+            <div style={styles.content}>
+
+                {activeTab === "search" && (
+                    <>
+                        <Search onSearch={handleSearch} />
+                        {loading && <p>Loading...</p>}
+
+                        {tracks.map(track => (
+                            <div key={track.id} style={styles.card}>
+                                <img
+                                    src={track.album?.images?.[0]?.url}
+                                    style={styles.img}
+                                />
+
+                                <div style={{ flex: 1 }}>
+                                    <b>{track.name}</b>
+                                    <div>{track.artists?.[0]?.name}</div>
+                                </div>
+
+                                <button
+                                    onClick={() => playPreview(track.preview_url)}
+                                    disabled={!track.preview_url}
+                                >
+                                    ▶
+                                </button>
+                            </div>
+                        ))}
+                    </>
+                )}
+
+                {activeTab === "library" && <Library />}
+
+            </div>
+        </div>
+    );
 }
 
-// ================= LOGIN =================
+// ================= STYLES =================
+const styles = {
+    container: {
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "#121212",
+        color: "white",
+        fontFamily: "Arial"
+    },
 
-app.get("/auth/login", async (req, res) => {
-  try {
-    console.log("LOGIN ROUTE HIT");
+    title: {
+        color: "#1DB954",
+        fontSize: "28px"
+    },
 
-    const codeVerifier = await generateCodeVerifier();
+    text: {
+        opacity: 0.7,
+        marginBottom: "20px"
+    },
 
-    // store verifier in secure cookie (CRITICAL FIX)
-    res.cookie("code_verifier", codeVerifier, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/"
-    });
+    button: {
+        background: "#1DB954",
+        border: "none",
+        padding: "10px 20px",
+        borderRadius: "20px",
+        cursor: "pointer",
+        fontWeight: "bold"
+    },
 
-    const uri = await client.authorizationCode.getAuthorizeUri({
-      redirectUri: process.env.SC_REDIRECT_URI,
-      codeVerifier,
-      scope: scope, // IMPORTANT FIX
-    });
+    app: {
+        minHeight: "100vh",
+        background: "#121212",
+        color: "white",
+        padding: "20px",
+        fontFamily: "Arial"
+    },
 
-    console.log("AUTH URL GENERATED");
+    header: {
+        marginBottom: "10px"
+    },
 
-    return res.redirect(uri);
+    logo: {
+        color: "#1DB954"
+    },
 
-  } catch (err) {
-    console.error("LOGIN ERROR:", err);
-    return res.status(500).json({
-      error: "Auth login failed",
-      details: err.message
-    });
-  }
-});
+    tabs: {
+        display: "flex",
+        gap: "10px",
+        marginBottom: "20px"
+    },
 
-// ================= CALLBACK =================
+    tab: {
+        padding: "10px",
+        borderRadius: "20px",
+        border: "1px solid #1DB954",
+        cursor: "pointer"
+    },
 
-app.get("/auth/callback", async (req, res) => {
-  try {
-    const fullRedirectUrl =
-      `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+    content: {
+        padding: "10px"
+    },
 
-    const codeVerifier = req.cookies.code_verifier;
+    card: {
+        display: "flex",
+        gap: "10px",
+        alignItems: "center",
+        background: "#181818",
+        padding: "10px",
+        marginBottom: "10px",
+        borderRadius: "8px"
+    },
 
-    if (!codeVerifier) {
-      throw new Error("Missing code_verifier cookie");
+    img: {
+        width: "40px",
+        height: "40px",
+        borderRadius: "5px"
     }
-
-    const tokenSet = await client.authorizationCode.getTokenFromCodeRedirect(
-      fullRedirectUrl,
-      {
-        redirectUri: process.env.SC_REDIRECT_URI,
-        codeVerifier,
-      }
-    );
-
-    const jwtToken = jwt.sign(
-      { accessToken: tokenSet.accessToken },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-
-    res.cookie("token", jwtToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/"
-    });
-
-    return res.redirect(process.env.FRONTEND_URL);
-
-  } catch (error) {
-    console.error("AUTH CALLBACK ERROR:", error);
-    return res.status(500).json({
-      error: "Authentication failed",
-      details: error.message
-    });
-  }
-});
-
-// ================= LOGIN CHECK =================
-
-app.get("/api/me", auth, (req, res) => {
-  return res.json({ loggedIn: true });
-});
-
-// ================= SEARCH =================
-
-app.get("/api/search", auth, async (req, res) => {
-  const query = req.query.q;
-
-  try {
-    const response = await axios.get(
-      "https://api.spotify.com/v1/search",
-      {
-        params: {
-          q: query,
-          type: "track",
-          limit: 10,
-        },
-        headers: {
-          Authorization: `Bearer ${req.accessToken}`
-        }
-      }
-    );
-
-    res.json(response.data.tracks.items);
-
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: "Search failed" });
-  }
-});
-
-// ================= LIBRARY =================
-
-app.get("/api/library", auth, async (req, res) => {
-  try {
-    const response = await axios.get(
-      "https://api.spotify.com/v1/me/tracks",
-      {
-        headers: {
-          Authorization: `Bearer ${req.accessToken}`
-        },
-        params: { limit: 50 }
-      }
-    );
-
-    const items = response.data.items
-      .map(item => ({
-        id: item.track?.id,
-        name: item.track?.name,
-        uri: item.track?.uri,
-        artists: item.track?.artists?.map(a => a.name).join(", "),
-        albumImage: item.track?.album?.images?.[0]?.url,
-        addedAt: item.added_at
-      }))
-      .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
-      .slice(0, 100);
-
-    res.json(items);
-
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.json([]);
-  }
-});
-
-// ================= PLAYLISTS =================
-
-app.get("/api/playlists", auth, async (req, res) => {
-  try {
-    const response = await axios.get(
-      "https://api.spotify.com/v1/me/playlists",
-      {
-        headers: {
-          Authorization: `Bearer ${req.accessToken}`
-        }
-      }
-    );
-
-    const playlists = response.data.items.map(p => ({
-      id: p.id,
-      name: p.name,
-      image: p.images?.[0]?.url || null,
-      tracks: p.tracks.total
-    }));
-
-    res.json(playlists);
-
-  } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.json([]);
-  }
-});
-
-// ================= START =================
-
-const PORT = process.env.PORT || 3001;
-
-app.listen(PORT, "0.0.0.0", () => {
-  console.log(`Backend running on port ${PORT}`);
-});
+};
