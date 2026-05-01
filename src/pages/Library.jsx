@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+const API = import.meta.env.VITE_API_URL;
 
 export default function Library({ playTrack }) {
     const [tracks, setTracks] = useState([]);
