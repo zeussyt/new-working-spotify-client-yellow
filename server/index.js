@@ -26,8 +26,19 @@ const app = express();
 
 // ================= MIDDLEWARE =================
 
+const allowedOrigins = [
+  "https://new-working-spotify-client-yellow.vercel.app",
+  "https://new-working-spotify-client-yellow-gcmr3ljbx.vercel.app"
+];
+
 app.use(cors({
-  origin: "https://new-working-spotify-client-yellow.vercel.app",
+  origin: function (origin, callback) {
+    if (!origin || allowedOrigins.includes(origin)) {
+      callback(null, true);
+    } else {
+      callback(new Error("Not allowed by CORS"));
+    }
+  },
   credentials: true
 }));
 
