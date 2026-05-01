@@ -33,7 +33,7 @@ app.get("/auth/login", async (req, res) => {
   const uri = await client.authorizationCode.getAuthorizeUri({
     redirectUri: process.env.SC_REDIRECT_URI,
     codeVerifier,
-    scope,
+    scope : scope,
   });
 
   res.redirect(uri);
