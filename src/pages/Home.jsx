@@ -1,4 +1,4 @@
-import { useEffect, useState, useRef } from "react";
+/*import { useEffect, useState, useRef } from "react";
 import Search from "../components/Search";
 import Library from "../pages/Library";
 
@@ -218,3 +218,53 @@ export default function Home() {
         </div>
     );
 }
+    */
+   export default function Home() {
+    return (
+        <div style={styles.container}>
+            <h1 style={styles.title}>🎉 Vercel Deployment Works</h1>
+            <p style={styles.text}>
+                If you can see this, your frontend is successfully deployed.
+            </p>
+
+            <button
+                style={styles.button}
+                onClick={() => alert("Button works too 🚀")}
+            >
+                Click Me
+            </button>
+        </div>
+    );
+}
+
+const styles = {
+    container: {
+        height: "100vh",
+        display: "flex",
+        flexDirection: "column",
+        justifyContent: "center",
+        alignItems: "center",
+        backgroundColor: "#121212",
+        color: "white",
+        fontFamily: "Arial, sans-serif",
+        textAlign: "center",
+        padding: "20px"
+    },
+    title: {
+        color: "#1DB954",
+        fontSize: "28px",
+        marginBottom: "10px"
+    },
+    text: {
+        opacity: 0.8,
+        marginBottom: "20px"
+    },
+    button: {
+        backgroundColor: "#1DB954",
+        border: "none",
+        padding: "10px 20px",
+        borderRadius: "20px",
+        cursor: "pointer",
+        fontWeight: "bold"
+    }
+};
