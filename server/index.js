@@ -19,20 +19,20 @@ export default function Home() {
 
     // ================= AUTH CHECK (FIXED) =================
     useEffect(() => {
-        async function checkLogin() {
-            try {
-                const res = await fetch(`${API}/api/me`, {
-                    credentials: "include"
-                });
+        const token = localStorage.getItem("token");
 
-                setIsLoggedIn(res.ok);
-            } catch (err) {
-                console.error(err);
-                setIsLoggedIn(false);
-            }
+        if (!token) {
+            setIsLoggedIn(false);
+            return;
         }
 
-        checkLogin();
+        fetch(`${API}/api/me`, {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        })
+            .then(res => setIsLoggedIn(res.ok))
+            .catch(() => setIsLoggedIn(false));
     }, []);
 
     // ================= SEARCH =================
@@ -43,7 +43,9 @@ export default function Home() {
             const res = await fetch(
                 `${API}/api/search?q=${encodeURIComponent(query)}`,
                 {
-                    credentials: "include"
+                    headers: {
+                        Authorization: `Bearer ${localStorage.getItem("token")}`
+                    }
                 }
             );
 
@@ -70,40 +72,43 @@ export default function Home() {
 
     // ================= LOGOUT =================
     async function handleLogout() {
-        try {
-            await fetch(`${API}/auth/logout`, {
-                method: "POST",
-                credentials: "include"
-            });
+        await fetch(`${API}/auth/logout`, {
+            method: "POST"
+        });
 
-            setIsLoggedIn(false);
-            setTracks([]);
-            setPlaylists([]);
-            setLibrary([]);
-            setAiPlaylists([]);
-        } catch (err) {
-            console.error("Logout failed", err);
-        }
+        localStorage.removeItem("token"); // IMPORTANT FIX
+
+        setIsLoggedIn(false);
+        setTracks([]);
+        setPlaylists([]);
+        setLibrary([]);
+        setAiPlaylists([]);
     }
 
     // ================= DATA LOADERS =================
     async function loadPlaylists() {
         const res = await fetch(`${API}/api/playlists`, {
-            credentials: "include"
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
         });
         setPlaylists(await res.json());
     }
 
     async function loadLibrary() {
         const res = await fetch(`${API}/api/library`, {
-            credentials: "include"
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
         });
         setLibrary(await res.json());
     }
 
     async function loadAiPlaylists() {
         const res = await fetch(`${API}/api/ai-playlists`, {
-            credentials: "include"
+            headers: {
+                Authorization: `Bearer ${localStorage.getItem("token")}`
+            }
         });
         setAiPlaylists(await res.json());
     }
@@ -123,6 +128,7 @@ export default function Home() {
                 <h1 style={styles.logo}>Spotify Clone</h1>
                 <p style={styles.subtitle}>Connect to your music</p>
 
+                {/* LOGIN BUTTON (NOW ALWAYS VISIBLE WHEN NOT LOGGED IN) */}
                 <a href={`${API}/auth/login`}>
                     <button style={styles.loginButton}>
                         Login with Spotify
@@ -146,7 +152,6 @@ export default function Home() {
         </button>
     );
 
-    // ================= APP =================
     return (
         <div style={styles.app}>
 
