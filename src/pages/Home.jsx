@@ -1,6 +1,5 @@
 import { useEffect, useState, useRef } from "react";
 import Search from "../components/Search";
-import Results from "../components/Results";
 import Library from "../pages/Library";
 
 const API = import.meta.env.VITE_API_URL;
@@ -17,43 +16,14 @@ export default function Home() {
     const [aiPlaylists, setAiPlaylists] = useState([]);
 
     const audioRef = useRef(null);
-    const [currentPreview, setCurrentPreview] = useState(null);
-
-    // ================= LOGIN TOKEN HANDLER =================
-    useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get("token");
-
-        if (token) {
-            localStorage.setItem("token", token);
-            window.history.replaceState({}, document.title, "/");
-            setIsLoggedIn(true);
-        }
-    }, []);
 
     // ================= AUTH CHECK =================
     useEffect(() => {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            setIsLoggedIn(false);
-            return;
-        }
-
         fetch(`${API}/api/me`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+            credentials: "include"
         })
-            .then(res => {
-                if (res.ok) setIsLoggedIn(true);
-                else {
-                    localStorage.removeItem("token");
-                    setIsLoggedIn(false);
-                }
-            })
+            .then(res => setIsLoggedIn(res.ok))
             .catch(() => setIsLoggedIn(false));
-
     }, []);
 
     // ================= SEARCH =================
@@ -61,14 +31,10 @@ export default function Home() {
         setLoading(true);
 
         try {
-            const token = localStorage.getItem("token");
-
             const res = await fetch(
                 `${API}/api/search?q=${encodeURIComponent(query)}`,
                 {
-                    headers: {
-                        Authorization: `Bearer ${token}`
-                    }
+                    credentials: "include"
                 }
             );
 
@@ -91,12 +57,14 @@ export default function Home() {
         const audio = new Audio(url);
         audioRef.current = audio;
         audio.play();
-        setCurrentPreview(url);
     }
 
     // ================= LOGOUT =================
     async function handleLogout() {
-        localStorage.removeItem("token");
+        await fetch(`${API}/auth/logout`, {
+            method: "POST",
+            credentials: "include"
+        });
 
         setIsLoggedIn(false);
         setTracks([]);
@@ -107,42 +75,24 @@ export default function Home() {
 
     // ================= DATA LOADERS =================
     async function loadPlaylists() {
-        const token = localStorage.getItem("token");
-
         const res = await fetch(`${API}/api/playlists`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+            credentials: "include"
         });
-
-        const data = await res.json();
-        setPlaylists(data);
+        setPlaylists(await res.json());
     }
 
     async function loadLibrary() {
-        const token = localStorage.getItem("token");
-
         const res = await fetch(`${API}/api/library`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+            credentials: "include"
         });
-
-        const data = await res.json();
-        setLibrary(data);
+        setLibrary(await res.json());
     }
 
     async function loadAiPlaylists() {
-        const token = localStorage.getItem("token");
-
         const res = await fetch(`${API}/api/ai-playlists`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+            credentials: "include"
         });
-
-        const data = await res.json();
-        setAiPlaylists(data);
+        setAiPlaylists(await res.json());
     }
 
     useEffect(() => {
@@ -176,7 +126,7 @@ export default function Home() {
                 ...styles.tab,
                 backgroundColor: activeTab === tab ? "#1DB954" : "transparent",
                 color: activeTab === tab ? "#000" : "#fff",
-                transform: activeTab === tab ? "scale(1.05)" : "scale(1)",
+                transform: activeTab === tab ? "scale(1.05)" : "scale(1)"
             }}
         >
             {label}
@@ -206,7 +156,7 @@ export default function Home() {
                 {activeTab === "search" && (
                     <>
                         <Search onSearch={handleSearch} />
-                        {loading && <p style={styles.text}>Loading...</p>}
+                        {loading && <p>Loading...</p>}
 
                         <div style={styles.resultsGrid}>
                             {tracks.map(track => (
@@ -220,7 +170,7 @@ export default function Home() {
                                         <div style={{ fontWeight: "bold" }}>
                                             {track.name}
                                         </div>
-                                        <div style={{ opacity: 0.7, fontSize: 12 }}>
+                                        <div style={{ opacity: 0.7 }}>
                                             {track.artists?.[0]?.name}
                                         </div>
                                     </div>
@@ -230,7 +180,7 @@ export default function Home() {
                                         onClick={() => playPreview(track.preview_url)}
                                         disabled={!track.preview_url}
                                     >
-                                        {track.preview_url ? "▶" : "N/A"}
+                                        ▶
                                     </button>
                                 </div>
                             ))}
@@ -246,15 +196,7 @@ export default function Home() {
                             {playlists.map(p => (
                                 <div key={p.id} style={styles.playlistCard}>
                                     <img src={p.image} style={styles.playlistImg} />
-
-                                    <div style={{ marginTop: 8 }}>
-                                        <div style={{ fontWeight: "bold" }}>
-                                            {p.name}
-                                        </div>
-                                        <div style={{ fontSize: 12, opacity: 0.6 }}>
-                                            {p.tracks} songs
-                                        </div>
-                                    </div>
+                                    <div>{p.name}</div>
                                 </div>
                             ))}
                         </div>
@@ -267,7 +209,7 @@ export default function Home() {
                     <div>
                         <h3 style={styles.sectionTitle}>AI Playlists</h3>
                         {aiPlaylists.map(p => (
-                            <div key={p.id} style={styles.card}>{p.name}</div>
+                            <div key={p.id}>{p.name}</div>
                         ))}
                     </div>
                 )}
