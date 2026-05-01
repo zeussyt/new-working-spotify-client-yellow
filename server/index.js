@@ -160,6 +160,12 @@ app.get("/auth/callback", async (req, res) => {
 
 // ================= LOGIN CHECK =================
 
+app.get("/api/me", auth, (req, res) => {
+  return res.json({ loggedIn: true });
+});
+
+// ================= SEARCH =================
+
 app.get("/api/search", auth, async (req, res) => {
   const query = req.query.q;
 
@@ -178,11 +184,13 @@ app.get("/api/search", auth, async (req, res) => {
       }
     );
 
-    return res.json(response.data.tracks.items || []);
+    res.json(response.data.tracks.items);
+
   } catch (err) {
     console.error("SEARCH ERROR:", err.response?.data || err.message);
 
-    return res.json([]);
+    //ALWAYS return array
+    res.json([]);
   }
 });
 
