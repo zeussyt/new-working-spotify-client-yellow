@@ -1,381 +1,261 @@
-import { useEffect, useState, useRef } from "react";
-import Search from "../components/Search";
-import Results from "../components/Results";
-import Library from "../pages/Library";
-const API = import.meta.env.VITE_API_URL;
+import express from "express";
+import axios from "axios";
+import cors from "cors";
+import dotenv from "dotenv";
+import { generateCodeVerifier, OAuth2Client } from "@badgateway/oauth2-client";
+import jwt from "jsonwebtoken";
+import cookieParser from "cookie-parser";
 
-export default function Home() {
-    const [tracks, setTracks] = useState([]);
-    const [loading, setLoading] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
+dotenv.config({ path: "./.env" });
 
-    const [activeTab, setActiveTab] = useState("search");
+const scope = [
+  "user-read-email",
+  "user-read-private",
+  "user-library-read",
+  "playlist-read-private",
+  "playlist-read-collaborative",
+  "user-top-read",
+  "user-read-playback-state",
+  "user-modify-playback-state",
+  "streaming"
+];
 
-    const [playlists, setPlaylists] = useState([]);
-    const [library, setLibrary] = useState([]);
-    const [aiPlaylists, setAiPlaylists] = useState([]);
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
-    const audioRef = useRef(null);
+const app = express();
 
-    const [currentPreview, setCurrentPreview] = useState(null);
+// ================= MIDDLEWARE =================
 
-    useEffect(() => {
-    const params = new URLSearchParams(window.location.search);
-    const token = params.get("token");
+app.use(cors({
+  origin: "https://new-working-spotify-client-yellow-gcmr3ljbx.vercel.app",
+  credentials: true
+}));
 
-    if (token) {
-        localStorage.setItem("token", token);
-        window.history.replaceState({}, document.title, "/");
-        setIsLoggedIn(true);
-    }
-}, []);
+app.use(express.json());
+app.use(cookieParser());
 
-    
+// ================= DEBUG =================
 
-    useEffect(() => {
-    fetch(`${API}/api/me`, {
-    headers: {
-        Authorization: `Bearer ${localStorage.getItem("token")}`
-    }
-})
-        .then(res => {
-            if (res.ok) {
-                setIsLoggedIn(true);
-            } else {
-                setIsLoggedIn(false);
-            }
-        })
-        .catch(err => {
-            console.error("Auth check failed:", err);
-            setIsLoggedIn(false);
-        });
-}, []);
+process.on("unhandledRejection", err => {
+  console.error("UNHANDLED REJECTION:", err);
+});
 
-    async function handleSearch(query) {
-        setLoading(true);
-        try {
-            const res = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                }
-            });
+process.on("uncaughtException", err => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+});
 
-            const data = await res.json();
-            setTracks(data);
-        } catch (err) {
-            console.error(err);
-        } finally {
-            setLoading(false);
-        }
-    }
+// ================= OAUTH CLIENT =================
 
-    function auth(req, res, next) {
-    const header = req.headers.authorization;
+const client = new OAuth2Client({
+  server: "https://accounts.spotify.com",
+  authorizationEndpoint: process.env.SC_AUTHORIZATION_URL,
+  tokenEndpoint: process.env.SC_TOKEN_URL,
+  clientId: process.env.SC_CLIENT_ID,
+  clientSecret: process.env.SC_CLIENT_SECRET,
+  redirectUri: process.env.SC_REDIRECT_URI,
+  pkce: true,
+});
 
-    if (!header) return res.status(401).json({ error: "No token" });
+// ================= AUTH MIDDLEWARE =================
 
-    try {
-        const token = header.split(" ")[1];
-        const decoded = jwt.verify(token, JWT_SECRET);
-        req.accessToken = decoded.accessToken;
-        next();
-    } catch (err) {
-        return res.status(401).json({ error: "Invalid token" });
-    }
+function auth(req, res, next) {
+  try {
+    const token =
+      req.cookies?.token ||
+      req.headers.authorization?.split(" ")[1] ||
+      req.query.token;
+
+    if (!token) return res.status(401).json({ loggedIn: false });
+
+    const decoded = jwt.verify(token, JWT_SECRET);
+    req.accessToken = decoded.accessToken;
+
+    next();
+  } catch (err) {
+    return res.status(401).json({ loggedIn: false });
+  }
 }
 
-    function playPreview(url) {
-        if (!url) return;
+// ================= LOGIN =================
 
-        if (audioRef.current) {
-            audioRef.current.pause();
-        }
+app.get("/auth/login", async (req, res) => {
+  try {
+    console.log("LOGIN ROUTE HIT");
 
-        const audio = new Audio(url);
-        audioRef.current = audio;
-        audio.play();
-        setCurrentPreview(url);
+    const codeVerifier = await generateCodeVerifier();
+
+    // store verifier in secure cookie (CRITICAL FIX)
+    res.cookie("code_verifier", codeVerifier, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/"
+    });
+
+    const uri = await client.authorizationCode.getAuthorizeUri({
+      redirectUri: process.env.SC_REDIRECT_URI,
+      codeVerifier,
+      scope: scope, // IMPORTANT FIX
+    });
+
+    console.log("AUTH URL GENERATED");
+
+    return res.redirect(uri);
+
+  } catch (err) {
+    console.error("LOGIN ERROR:", err);
+    return res.status(500).json({
+      error: "Auth login failed",
+      details: err.message
+    });
+  }
+});
+
+// ================= CALLBACK =================
+
+app.get("/auth/callback", async (req, res) => {
+  try {
+    const fullRedirectUrl =
+      `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+
+    const codeVerifier = req.cookies.code_verifier;
+
+    if (!codeVerifier) {
+      throw new Error("Missing code_verifier cookie");
     }
 
-    async function handleLogout() {
-        try {
-            await fetch(`${API}/auth/logout`, {
-                method: "POST",
-                credentials: "include"
-            });
-
-            setIsLoggedIn(false);
-            setTracks([]);
-            setPlaylists([]);
-            setLibrary([]);
-            setAiPlaylists([]);
-        } catch (err) {
-            console.error("Logout failed", err);
-        }
-    }
-
-    async function loadPlaylists() {
-        try {
-            const res = await fetch(`${API}/api/playlists`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                }
-            });
-            const data = await res.json();
-            setPlaylists(data);
-        } catch (err) { console.error(err); }
-    }
-
-    async function loadLibrary() {
-        try {
-            const res = await fetch(`${API}/api/library`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                }
-            });
-            const data = await res.json();
-            setLibrary(data);
-        } catch (err) { console.error(err); }
-    }
-
-    async function loadAiPlaylists() {
-        try {
-            const res = await fetch(`${API}/api/ai-playlists`, {
-                headers: {
-                    Authorization: `Bearer ${localStorage.getItem("token")}`
-                }
-            });
-            const data = await res.json();
-            setAiPlaylists(data);
-        } catch (err) { console.error(err); }
-    }
-
-    useEffect(() => {
-        if (!isLoggedIn) return;
-
-        if (activeTab === "playlists") loadPlaylists();
-        if (activeTab === "library") loadLibrary();
-        if (activeTab === "ai") loadAiPlaylists();
-    }, [activeTab, isLoggedIn]);
-
-    if (!isLoggedIn) {
-        return (
-            <div style={styles.loginContainer}>
-                <h1 style={styles.logo}>Spotify Clone</h1>
-                <p style={styles.subtitle}>Connect to your music</p>
-               <a href={`${API}/auth/login`}>
-                    <button style={styles.loginButton}>Login with Spotify</button>
-                </a>
-            </div>
-        );
-    }
-
-    const TabButton = ({ label, tab }) => (
-        <button
-            onClick={() => setActiveTab(tab)}
-            style={{
-                ...styles.tab,
-                backgroundColor: activeTab === tab ? "#1DB954" : "transparent",
-                color: activeTab === tab ? "#000" : "#fff",
-                transform: activeTab === tab ? "scale(1.05)" : "scale(1)",
-            }}
-        >
-            {label}
-        </button>
+    const tokenSet = await client.authorizationCode.getTokenFromCodeRedirect(
+      fullRedirectUrl,
+      {
+        redirectUri: process.env.SC_REDIRECT_URI,
+        codeVerifier,
+      }
     );
 
-    return (
-        <div style={styles.app}>
-
-            <div style={styles.header}>
-                <h2 style={styles.logoSmall}>Spotify Clone</h2>
-                <button style={styles.logoutButton} onClick={handleLogout}>
-                    Log out
-                </button>
-            </div>
-
-            <div style={styles.tabBar}>
-                <TabButton label="Search" tab="search" />
-                <TabButton label="Playlists" tab="playlists" />
-                <TabButton label="Library" tab="library" />
-                <TabButton label="AI Mix" tab="ai" />
-            </div>
-
-            <div style={styles.content}>
-
-                {activeTab === "search" && (
-                    <>
-                        <Search onSearch={handleSearch} />
-                        {loading && <p style={styles.text}>Loading...</p>}
-
-                        {/* Custom Results with preview playback */}
-                        <div style={styles.resultsGrid}>
-                            {tracks.map(track => (
-                                <div key={track.id} style={styles.trackCard}>
-                                    <img
-                                        src={track.album?.images?.[0]?.url}
-                                        style={styles.thumbnail}
-                                    />
-
-                                    <div style={{ flex: 1 }}>
-                                        <div style={{ fontWeight: "bold" }}>
-                                            {track.name}
-                                        </div>
-                                        <div style={{ opacity: 0.7, fontSize: 12 }}>
-                                            {track.artists?.[0]?.name}
-                                        </div>
-                                    </div>
-
-                                    <button
-                                        style={styles.playButton}
-                                        onClick={() => playPreview(track.preview_url)}
-                                        disabled={!track.preview_url}
-                                    >
-                                        {track.preview_url ? "▶" : "N/A"}
-                                    </button>
-                                </div>
-                            ))}
-                        </div>
-                    </>
-                )}
-
-                {activeTab === "playlists" && (
-                    <div>
-                        <h3 style={styles.sectionTitle}>Your Playlists</h3>
-                       <div style={styles.playlistGrid}>
-    {playlists.map(p => (
-        <div key={p.id} style={styles.playlistCard}>
-            <img
-                src={p.image}
-                alt={p.name}
-                style={styles.playlistImg}
-            />
-
-            <div style={{ marginTop: 8 }}>
-                <div style={{ fontWeight: "bold" }}>
-                    {p.name}
-                </div>
-                <div style={{ fontSize: 12, opacity: 0.6 }}>
-                    {p.tracks} songs
-                </div>
-            </div>
-        </div>
-    ))}
-</div>
-                    </div>
-                )}
-
-               {activeTab === "library" && (
-    <Library />
-                                        )}
-
-                {activeTab === "ai" && (
-                    <div>
-                        <h3 style={styles.sectionTitle}>AI Playlists</h3>
-                        {aiPlaylists.map(p => (
-                            <div key={p.id} style={styles.card}>{p.name}</div>
-                        ))}
-                    </div>
-                )}
-
-            </div>
-        </div>
+    const jwtToken = jwt.sign(
+      { accessToken: tokenSet.accessToken },
+      JWT_SECRET,
+      { expiresIn: "7d" }
     );
-}
 
-const styles = {
+    res.cookie("token", jwtToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/"
+    });
 
-    playlistGrid: {
-    display: "grid",
-    gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-    gap: "12px"
-},
+    return res.redirect(process.env.FRONTEND_URL);
 
-playlistCard: {
-    background: "#181818",
-    padding: "10px",
-    borderRadius: "10px",
-    cursor: "pointer",
-    transition: "0.2s",
-},
+  } catch (error) {
+    console.error("AUTH CALLBACK ERROR:", error);
+    return res.status(500).json({
+      error: "Authentication failed",
+      details: error.message
+    });
+  }
+});
 
-playlistImg: {
-    width: "100%",
-    height: "140px",
-    objectFit: "cover",
-    borderRadius: "8px",
-    background: "#333"
-}, 
-    app: {
-        minHeight: "100vh",
-        backgroundColor: "#121212",
-        color: "white",
-        fontFamily: "Arial, sans-serif",
-        padding: "20px"
-    },
-    header: {
-        marginBottom: "10px",
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center"
-    },
-    logoSmall: { color: "#1DB954" },
-    logoutButton: {
-        backgroundColor: "transparent",
-        border: "1px solid #1DB954",
-        color: "#1DB954",
-        padding: "6px 12px",
-        borderRadius: "20px",
-        cursor: "pointer"
-    },
-    tabBar: {
-        display: "flex",
-        gap: "10px",
-        marginBottom: "20px",
-        borderBottom: "1px solid #333",
-        paddingBottom: "10px"
-    },
-    tab: {
-        padding: "10px 16px",
-        borderRadius: "20px",
-        border: "1px solid #1DB954",
-        backgroundColor: "transparent",
-        color: "white",
-        cursor: "pointer"
-    },
-    content: { padding: "10px" },
-    sectionTitle: { color: "#1DB954" },
-    text: { opacity: 0.7 },
+// ================= LOGIN CHECK =================
 
-    resultsGrid: {
-        display: "flex",
-        flexDirection: "column",
-        gap: "10px",
-        marginTop: "10px"
-    },
+app.get("/api/me", auth, (req, res) => {
+  return res.json({ loggedIn: true });
+});
 
-    trackCard: {
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        backgroundColor: "#181818",
-        padding: "8px",
-        borderRadius: "8px",
-        border: "1px solid #282828"
-    },
+// ================= SEARCH =================
 
-    thumbnail: {
-        width: "40px",
-        height: "40px",
-        borderRadius: "4px"
-    },
+app.get("/api/search", auth, async (req, res) => {
+  const query = req.query.q;
 
-    playButton: {
-        backgroundColor: "#1DB954",
-        border: "none",
-        borderRadius: "50%",
-        width: "30px",
-        height: "30px",
-        cursor: "pointer"
-    }
-};
+  try {
+    const response = await axios.get(
+      "https://api.spotify.com/v1/search",
+      {
+        params: {
+          q: query,
+          type: "track",
+          limit: 10,
+        },
+        headers: {
+          Authorization: `Bearer ${req.accessToken}`
+        }
+      }
+    );
+
+    res.json(response.data.tracks.items);
+
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.status(500).json({ error: "Search failed" });
+  }
+});
+
+// ================= LIBRARY =================
+
+app.get("/api/library", auth, async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://api.spotify.com/v1/me/tracks",
+      {
+        headers: {
+          Authorization: `Bearer ${req.accessToken}`
+        },
+        params: { limit: 50 }
+      }
+    );
+
+    const items = response.data.items
+      .map(item => ({
+        id: item.track?.id,
+        name: item.track?.name,
+        uri: item.track?.uri,
+        artists: item.track?.artists?.map(a => a.name).join(", "),
+        albumImage: item.track?.album?.images?.[0]?.url,
+        addedAt: item.added_at
+      }))
+      .sort((a, b) => new Date(b.addedAt) - new Date(a.addedAt))
+      .slice(0, 100);
+
+    res.json(items);
+
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.json([]);
+  }
+});
+
+// ================= PLAYLISTS =================
+
+app.get("/api/playlists", auth, async (req, res) => {
+  try {
+    const response = await axios.get(
+      "https://api.spotify.com/v1/me/playlists",
+      {
+        headers: {
+          Authorization: `Bearer ${req.accessToken}`
+        }
+      }
+    );
+
+    const playlists = response.data.items.map(p => ({
+      id: p.id,
+      name: p.name,
+      image: p.images?.[0]?.url || null,
+      tracks: p.tracks.total
+    }));
+
+    res.json(playlists);
+
+  } catch (err) {
+    console.error(err.response?.data || err.message);
+    res.json([]);
+  }
+});
+
+// ================= START =================
+
+const PORT = process.env.PORT || 3001;
+
+app.listen(PORT, "0.0.0.0", () => {
+  console.log(`Backend running on port ${PORT}`);
+});
