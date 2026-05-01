@@ -184,6 +184,9 @@ app.get("/api/search", auth, async (req, res) => {
       }
     );
 
+    console.log("AUTH HEADER:", req.headers.authorization);
+    console.log("ACCESS TOKEN:", req.accessToken);
+
     res.json(response.data.tracks.items);
 
   } catch (err) {
