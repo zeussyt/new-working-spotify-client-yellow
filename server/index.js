@@ -9,8 +9,17 @@ import cookieParser from "cookie-parser";
 
 dotenv.config({ path: "./.env" });
 
-const scope =
-  "user-read-email user-read-private user-library-read playlist-read-private playlist-read-collaborative user-top-read user-read-playback-state user-modify-playback-state streaming";
+const scope = [
+  "user-read-email",
+  "user-read-private",
+  "user-library-read",
+  "playlist-read-private",
+  "playlist-read-collaborative",
+  "user-top-read",
+  "user-read-playback-state",
+  "user-modify-playback-state",
+  "streaming"
+];
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 
