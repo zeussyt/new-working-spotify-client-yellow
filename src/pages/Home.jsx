@@ -1,4 +1,4 @@
-/*import { useEffect, useState, useRef } from "react";
+import { useState, useRef } from "react";
 import Search from "../components/Search";
 import Library from "../pages/Library";
 
@@ -7,41 +7,25 @@ const API = import.meta.env.VITE_API_URL;
 export default function Home() {
     const [tracks, setTracks] = useState([]);
     const [loading, setLoading] = useState(false);
-    const [isLoggedIn, setIsLoggedIn] = useState(false);
 
     const [activeTab, setActiveTab] = useState("search");
 
-    const [playlists, setPlaylists] = useState([]);
-    const [library, setLibrary] = useState([]);
-    const [aiPlaylists, setAiPlaylists] = useState([]);
-
     const audioRef = useRef(null);
 
-    // ================= AUTH CHECK =================
-    useEffect(() => {
-        fetch(`${API}/api/me`, {
-            credentials: "include"
-        })
-            .then(res => setIsLoggedIn(res.ok))
-            .catch(() => setIsLoggedIn(false));
-    }, []);
-
-    // ================= SEARCH =================
+    // ================= SEARCH (SAFE TEST MODE) =================
     async function handleSearch(query) {
         setLoading(true);
 
         try {
             const res = await fetch(
-                `${API}/api/search?q=${encodeURIComponent(query)}`,
-                {
-                    credentials: "include"
-                }
+                `${API}/api/search?q=${encodeURIComponent(query)}`
             );
 
             const data = await res.json();
-            setTracks(data);
+            setTracks(data || []);
         } catch (err) {
             console.error(err);
+            setTracks([]);
         } finally {
             setLoading(false);
         }
@@ -57,66 +41,6 @@ export default function Home() {
         const audio = new Audio(url);
         audioRef.current = audio;
         audio.play();
-    }
-
-    // ================= LOGOUT =================
-    async function handleLogout() {
-        await fetch(`${API}/auth/logout`, {
-            method: "POST",
-            credentials: "include"
-        });
-
-        setIsLoggedIn(false);
-        setTracks([]);
-        setPlaylists([]);
-        setLibrary([]);
-        setAiPlaylists([]);
-    }
-
-    // ================= DATA LOADERS =================
-    async function loadPlaylists() {
-        const res = await fetch(`${API}/api/playlists`, {
-            credentials: "include"
-        });
-        setPlaylists(await res.json());
-    }
-
-    async function loadLibrary() {
-        const res = await fetch(`${API}/api/library`, {
-            credentials: "include"
-        });
-        setLibrary(await res.json());
-    }
-
-    async function loadAiPlaylists() {
-        const res = await fetch(`${API}/api/ai-playlists`, {
-            credentials: "include"
-        });
-        setAiPlaylists(await res.json());
-    }
-
-    useEffect(() => {
-        if (!isLoggedIn) return;
-
-        if (activeTab === "playlists") loadPlaylists();
-        if (activeTab === "library") loadLibrary();
-        if (activeTab === "ai") loadAiPlaylists();
-    }, [activeTab, isLoggedIn]);
-
-    // ================= LOGIN SCREEN =================
-    if (!isLoggedIn) {
-        return (
-            <div style={styles.loginContainer}>
-                <h1 style={styles.logo}>Spotify Clone</h1>
-                <p style={styles.subtitle}>Connect to your music</p>
-
-                <a href={`${API}/auth/login`}>
-                    <button style={styles.loginButton}>
-                        Login with Spotify
-                    </button>
-                </a>
-            </div>
-        );
     }
 
     const TabButton = ({ label, tab }) => (
@@ -138,17 +62,11 @@ export default function Home() {
 
             <div style={styles.header}>
                 <h2 style={styles.logoSmall}>Spotify Clone</h2>
-
-                <button style={styles.logoutButton} onClick={handleLogout}>
-                    Log out
-                </button>
             </div>
 
             <div style={styles.tabBar}>
                 <TabButton label="Search" tab="search" />
-                <TabButton label="Playlists" tab="playlists" />
                 <TabButton label="Library" tab="library" />
-                <TabButton label="AI Mix" tab="ai" />
             </div>
 
             <div style={styles.content}>
@@ -156,7 +74,8 @@ export default function Home() {
                 {activeTab === "search" && (
                     <>
                         <Search onSearch={handleSearch} />
-                        {loading && <p>Loading...</p>}
+
+                        {loading && <p style={styles.text}>Loading...</p>}
 
                         <div style={styles.resultsGrid}>
                             {tracks.map(track => (
@@ -188,83 +107,84 @@ export default function Home() {
                     </>
                 )}
 
-                {activeTab === "playlists" && (
-                    <div>
-                        <h3 style={styles.sectionTitle}>Your Playlists</h3>
-
-                        <div style={styles.playlistGrid}>
-                            {playlists.map(p => (
-                                <div key={p.id} style={styles.playlistCard}>
-                                    <img src={p.image} style={styles.playlistImg} />
-                                    <div>{p.name}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-
                 {activeTab === "library" && <Library />}
-
-                {activeTab === "ai" && (
-                    <div>
-                        <h3 style={styles.sectionTitle}>AI Playlists</h3>
-                        {aiPlaylists.map(p => (
-                            <div key={p.id}>{p.name}</div>
-                        ))}
-                    </div>
-                )}
 
             </div>
         </div>
     );
 }
-    */
-   export default function Home() {
-    return (
-        <div style={styles.container}>
-            <h1 style={styles.title}>🎉 Vercel Deployment Works</h1>
-            <p style={styles.text}>
-                If you can see this, your frontend is successfully deployed.
-            </p>
 
-            <button
-                style={styles.button}
-                onClick={() => alert("Button works too 🚀")}
-            >
-                Click Me
-            </button>
-        </div>
-    );
-}
-
+// ================= STYLES (UNCHANGED FORMAT) =================
 const styles = {
-    container: {
-        height: "100vh",
-        display: "flex",
-        flexDirection: "column",
-        justifyContent: "center",
-        alignItems: "center",
+    app: {
+        minHeight: "100vh",
         backgroundColor: "#121212",
         color: "white",
         fontFamily: "Arial, sans-serif",
-        textAlign: "center",
         padding: "20px"
     },
-    title: {
-        color: "#1DB954",
-        fontSize: "28px",
-        marginBottom: "10px"
+
+    header: {
+        marginBottom: "10px",
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center"
     },
-    text: {
-        opacity: 0.8,
-        marginBottom: "20px"
+
+    logoSmall: { color: "#1DB954" },
+
+    tabBar: {
+        display: "flex",
+        gap: "10px",
+        marginBottom: "20px",
+        borderBottom: "1px solid #333",
+        paddingBottom: "10px"
     },
-    button: {
+
+    tab: {
+        padding: "10px 16px",
+        borderRadius: "20px",
+        border: "1px solid #1DB954",
+        backgroundColor: "transparent",
+        color: "white",
+        cursor: "pointer"
+    },
+
+    content: { padding: "10px" },
+
+    resultsGrid: {
+        display: "flex",
+        flexDirection: "column",
+        gap: "10px",
+        marginTop: "10px"
+    },
+
+    trackCard: {
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        backgroundColor: "#181818",
+        padding: "8px",
+        borderRadius: "8px",
+        border: "1px solid #282828"
+    },
+
+    thumbnail: {
+        width: "40px",
+        height: "40px",
+        borderRadius: "4px"
+    },
+
+    playButton: {
         backgroundColor: "#1DB954",
         border: "none",
-        padding: "10px 20px",
-        borderRadius: "20px",
-        cursor: "pointer",
-        fontWeight: "bold"
+        borderRadius: "50%",
+        width: "30px",
+        height: "30px",
+        cursor: "pointer"
+    },
+
+    text: {
+        opacity: 0.7
     }
 };
