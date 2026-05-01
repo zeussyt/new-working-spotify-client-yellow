@@ -27,12 +27,13 @@ const app = express();
 // ================= MIDDLEWARE =================
 
 app.use(cors({
-  origin: "https://new-working-spotify-client-yellow-gcmr3ljbx.vercel.app",
+  origin: "https://new-working-spotify-client-yellow.vercel.app",
   credentials: true
 }));
 
 app.use(express.json());
 app.use(cookieParser());
+app.set("trust proxy", 1);
 
 // ================= DEBUG =================
 
@@ -85,12 +86,16 @@ app.get("/auth/login", async (req, res) => {
     const codeVerifier = await generateCodeVerifier();
 
     // store verifier in secure cookie (CRITICAL FIX)
-    res.cookie("code_verifier", codeVerifier, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-      path: "/"
-    });
+    res.cookie("token", jwtToken, {
+  httpOnly: true,
+  secure: true,
+  sameSite: "none",
+  path: "/"
+});
+
+console.log("COOKIE SET SUCCESSFULLY");
+
+return res.redirect(process.env.FRONTEND_URL + "?login=success");
 
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
