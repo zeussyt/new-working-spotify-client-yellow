@@ -52,7 +52,6 @@ app.use(cors({
   credentials: true
 }));
 app.use(express.json());
-const FileStoreSession = FileStore(session);
 const PORT = process.env.PORT || 3001;
 
 app.listen(PORT, "0.0.0.0", () => {
@@ -75,7 +74,7 @@ const redirectUri = process.env.SC_REDIRECT_URI;
 
 
 app.set("trust proxy", 1);
-app.use(session({
+/*app.use(session({
   store: new FileStoreSession({
     path: "./sessions",
     ttl: 86400,
@@ -89,7 +88,7 @@ app.use(session({
     maxAge: 86400000
   }
 }));
-
+*/
 // Step 1: redirect user to Spotify login
 /*app.get("/auth/login", async (req, res) => {
   const codeVerifier  = await generateCodeVerifier();
