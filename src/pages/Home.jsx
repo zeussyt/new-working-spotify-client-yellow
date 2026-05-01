@@ -67,7 +67,8 @@ export default function Home() {
                 }
             );
 
-            setTracks(await res.json());
+           const data = await res.json();
+            setTracks(Array.isArray(data) ? data : []);
         } catch (err) {
             console.error(err);
         } finally {
@@ -188,7 +189,7 @@ export default function Home() {
                         {loading && <div style={styles.loading}>Loading...</div>}
 
                         <div style={styles.grid}>
-                            {tracks.map(track => (
+                            {Array.isArray(tracks) && tracks.map(track => (
                                 <div key={track.id} style={styles.card}>
                                     <img
                                         src={track.album?.images?.[0]?.url}

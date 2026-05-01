@@ -187,8 +187,10 @@ app.get("/api/search", auth, async (req, res) => {
     res.json(response.data.tracks.items);
 
   } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.status(500).json({ error: "Search failed" });
+    console.error("SEARCH ERROR:", err.response?.data || err.message);
+
+    //ALWAYS return array
+    res.json([]);
   }
 });
 
@@ -221,9 +223,12 @@ app.get("/api/library", auth, async (req, res) => {
     res.json(items);
 
   } catch (err) {
-    console.error(err.response?.data || err.message);
-    res.json([]);
-  }
+  console.error("SEARCH ERROR:");
+  console.error("Status:", err.response?.status);
+  console.error("Data:", err.response?.data);
+
+  res.json([]);
+}
 });
 
 // ================= PLAYLISTS =================
