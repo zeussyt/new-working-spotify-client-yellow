@@ -84,7 +84,7 @@ app.get("/auth/login", async (req, res) => {
 
     const codeVerifier = await generateCodeVerifier();
 
-    // store verifier in secure cookie (THIS FIXES YOUR ERROR)
+    // store verifier in secure cookie (CRITICAL FIX)
     res.cookie("code_verifier", codeVerifier, {
       httpOnly: true,
       secure: true,
@@ -95,7 +95,7 @@ app.get("/auth/login", async (req, res) => {
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
       codeVerifier,
-      scope,
+      scope: scope.join(" "), // IMPORTANT FIX
     });
 
     console.log("AUTH URL GENERATED");
@@ -114,16 +114,14 @@ app.get("/auth/login", async (req, res) => {
 // ================= CALLBACK =================
 
 app.get("/auth/callback", async (req, res) => {
-  const fullRedirectUrl =
-    `${req.protocol}://${req.get("host")}${req.originalUrl}`;
-
   try {
+    const fullRedirectUrl =
+      `${req.protocol}://${req.get("host")}${req.originalUrl}`;
+
     const codeVerifier = req.cookies.code_verifier;
 
     if (!codeVerifier) {
-      return res.status(400).json({
-        error: "Missing code verifier"
-      });
+      throw new Error("Missing code_verifier cookie");
     }
 
     const tokenSet = await client.authorizationCode.getTokenFromCodeRedirect(
@@ -140,7 +138,6 @@ app.get("/auth/callback", async (req, res) => {
       { expiresIn: "7d" }
     );
 
-    // store final login token
     res.cookie("token", jwtToken, {
       httpOnly: true,
       secure: true,
@@ -148,13 +145,13 @@ app.get("/auth/callback", async (req, res) => {
       path: "/"
     });
 
-    return res.redirect(process.env.SC_REDIRECT_URI);
+    return res.redirect(process.env.FRONTEND_URL);
 
   } catch (error) {
-    console.error("AUTH CALLBACK ERROR:", error.response?.data || error);
-
+    console.error("AUTH CALLBACK ERROR:", error);
     return res.status(500).json({
-      error: "Authentication failed"
+      error: "Authentication failed",
+      details: error.message
     });
   }
 });
