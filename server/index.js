@@ -3,7 +3,6 @@ import axios from "axios";
 import cors from "cors";
 import dotenv from "dotenv";
 import { generateCodeVerifier, OAuth2Client } from "@badgateway/oauth2-client";
-import fs from "fs";
 import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 
@@ -47,7 +46,6 @@ process.on("uncaughtException", err => {
 
 // ================= OAUTH CLIENT =================
 
-// IMPORTANT: correct Spotify OAuth host
 const client = new OAuth2Client({
   server: "https://accounts.spotify.com",
   authorizationEndpoint: process.env.SC_AUTHORIZATION_URL,
@@ -70,7 +68,6 @@ function auth(req, res, next) {
     if (!token) return res.status(401).json({ loggedIn: false });
 
     const decoded = jwt.verify(token, JWT_SECRET);
-
     req.accessToken = decoded.accessToken;
 
     next();
@@ -81,12 +78,19 @@ function auth(req, res, next) {
 
 // ================= LOGIN =================
 
-// Step 1: redirect user to Spotify login
 app.get("/auth/login", async (req, res) => {
   try {
     console.log("LOGIN ROUTE HIT");
 
     const codeVerifier = await generateCodeVerifier();
+
+    // store verifier in secure cookie (THIS FIXES YOUR ERROR)
+    res.cookie("code_verifier", codeVerifier, {
+      httpOnly: true,
+      secure: true,
+      sameSite: "none",
+      path: "/"
+    });
 
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
@@ -96,11 +100,11 @@ app.get("/auth/login", async (req, res) => {
 
     console.log("AUTH URL GENERATED");
 
-    res.redirect(uri);
+    return res.redirect(uri);
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    res.status(500).json({
+    return res.status(500).json({
       error: "Auth login failed",
       details: err.message
     });
@@ -109,7 +113,6 @@ app.get("/auth/login", async (req, res) => {
 
 // ================= CALLBACK =================
 
-// Step 2: handle callback
 app.get("/auth/callback", async (req, res) => {
   const fullRedirectUrl =
     `${req.protocol}://${req.get("host")}${req.originalUrl}`;
@@ -118,8 +121,9 @@ app.get("/auth/callback", async (req, res) => {
     const codeVerifier = req.cookies.code_verifier;
 
     if (!codeVerifier) {
-      console.error("Missing code_verifier cookie");
-      return res.status(400).json({ error: "Missing verifier" });
+      return res.status(400).json({
+        error: "Missing code verifier"
+      });
     }
 
     const tokenSet = await client.authorizationCode.getTokenFromCodeRedirect(
@@ -130,65 +134,41 @@ app.get("/auth/callback", async (req, res) => {
       }
     );
 
-    const accessToken = tokenSet.accessToken;
+    const jwtToken = jwt.sign(
+      { accessToken: tokenSet.accessToken },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    const jwtToken = jwt.sign({ accessToken }, JWT_SECRET, {
-      expiresIn: "7d",
-    });
-
+    // store final login token
     res.cookie("token", jwtToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
+      path: "/"
     });
-
-    return res.redirect(
-      "https://new-working-spotify-client-yellow.vercel.app"
-    );
-
-  } catch (error) {
-    console.error("FULL AUTH ERROR:", error.response?.data || error);
-    return res.status(500).json({ error: "Authentication failed" });
-  }
-});
-
-    // store JWT in secure cookie
-    /*res.cookie("token", jwtToken, {
-      httpOnly: true,
-      secure: true,
-      sameSite: "none",
-    });
-    */
-  res.cookie("code_verifier", codeVerifier, {
-  httpOnly: true,
-  secure: true,
-  sameSite: "none",
-  path: "/"
-});
 
     return res.redirect(process.env.FRONTEND_URL);
 
   } catch (error) {
-    console.error("Auth error", error);
-    res.status(500).json({ error: "Authentication failed" });
+    console.error("AUTH CALLBACK ERROR:", error.response?.data || error);
+
+    return res.status(500).json({
+      error: "Authentication failed"
+    });
   }
 });
 
 // ================= LOGIN CHECK =================
 
 app.get("/api/me", auth, (req, res) => {
-  console.log("api.me is functioning");
-  res.json({ loggedIn: true });
+  return res.json({ loggedIn: true });
 });
 
 // ================= SEARCH =================
 
 app.get("/api/search", auth, async (req, res) => {
   const query = req.query.q;
-
-  console.log("Search request:", query);
-
-  const token = req.accessToken;
 
   try {
     const response = await axios.get(
@@ -200,7 +180,7 @@ app.get("/api/search", auth, async (req, res) => {
           limit: 10,
         },
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${req.accessToken}`
         }
       }
     );
@@ -208,7 +188,7 @@ app.get("/api/search", auth, async (req, res) => {
     res.json(response.data.tracks.items);
 
   } catch (err) {
-    console.error("Spotify error:", err.response?.data || err.message);
+    console.error(err.response?.data || err.message);
     res.status(500).json({ error: "Search failed" });
   }
 });
@@ -216,14 +196,12 @@ app.get("/api/search", auth, async (req, res) => {
 // ================= LIBRARY =================
 
 app.get("/api/library", auth, async (req, res) => {
-  const token = req.accessToken;
-
   try {
     const response = await axios.get(
       "https://api.spotify.com/v1/me/tracks",
       {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${req.accessToken}`
         },
         params: { limit: 50 }
       }
@@ -252,14 +230,12 @@ app.get("/api/library", auth, async (req, res) => {
 // ================= PLAYLISTS =================
 
 app.get("/api/playlists", auth, async (req, res) => {
-  const token = req.accessToken;
-
   try {
     const response = await axios.get(
       "https://api.spotify.com/v1/me/playlists",
       {
         headers: {
-          Authorization: `Bearer ${token}`
+          Authorization: `Bearer ${req.accessToken}`
         }
       }
     );
