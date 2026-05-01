@@ -10,6 +10,8 @@ const scope =
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 //let codeVerifierGlobal = null; //need to store this in session storage
+
+
 const app = express();
 
 /*const scope = [
@@ -24,6 +26,14 @@ const app = express();
     "streaming"
 ];
 */
+
+process.on("unhandledRejection", err => {
+  console.error("UNHANDLED REJECTION:", err);
+});
+
+process.on("uncaughtException", err => {
+  console.error("UNCAUGHT EXCEPTION:", err);
+});
 
 app.get("/auth/login", async (req, res) => {
   const codeVerifier = await generateCodeVerifier();
@@ -128,23 +138,30 @@ BRING BACK IF SOMETHING BREAKS */
 
 app.get("/auth/login", async (req, res) => {
   try {
+    console.log("LOGIN ROUTE HIT");
+
     const codeVerifier = await generateCodeVerifier();
+
+    console.log("CODE VERIFIER OK");
 
     req.session.codeVerifier = codeVerifier;
 
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
       codeVerifier,
-      scope, 
+      scope: scope, // MUST be string
     });
 
-    res.redirect(uri);
+    console.log("AUTH URL GENERATED:", uri);
+
+    return res.redirect(uri);
 
   } catch (err) {
-    console.error("LOGIN ERROR:", err);
-    res.status(500).json({
+    console.error("🔥 LOGIN FAILED FULL ERROR:", err);
+    return res.status(500).json({
       error: "Auth login failed",
-      details: err.message
+      details: err.message,
+      stack: err.stack
     });
   }
 });
