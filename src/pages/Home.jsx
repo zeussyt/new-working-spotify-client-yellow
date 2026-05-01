@@ -19,10 +19,25 @@ export default function Home() {
 
     const [currentPreview, setCurrentPreview] = useState(null);
 
+    useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("token");
+
+    if (token) {
+        localStorage.setItem("token", token);
+        window.history.replaceState({}, document.title, "/");
+        setIsLoggedIn(true);
+    }
+}, []);
+
     
 
     useEffect(() => {
-    fetch(`${API}/api/me`, { credentials: "include" })
+    fetch(`${API}/api/me`, {
+    headers: {
+        Authorization: `Bearer ${localStorage.getItem("token")}`
+    }
+})
         .then(res => {
             if (res.ok) {
                 setIsLoggedIn(true);
@@ -40,7 +55,9 @@ export default function Home() {
         setLoading(true);
         try {
             const res = await fetch(`${API}/api/search?q=${encodeURIComponent(query)}`, {
-                credentials: "include"
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
             });
 
             const data = await res.json();
@@ -51,6 +68,21 @@ export default function Home() {
             setLoading(false);
         }
     }
+
+    function auth(req, res, next) {
+    const header = req.headers.authorization;
+
+    if (!header) return res.status(401).json({ error: "No token" });
+
+    try {
+        const token = header.split(" ")[1];
+        const decoded = jwt.verify(token, JWT_SECRET);
+        req.accessToken = decoded.accessToken;
+        next();
+    } catch (err) {
+        return res.status(401).json({ error: "Invalid token" });
+    }
+}
 
     function playPreview(url) {
         if (!url) return;
@@ -84,7 +116,11 @@ export default function Home() {
 
     async function loadPlaylists() {
         try {
-            const res = await fetch(`${API}/api/playlists`, { credentials: "include" });
+            const res = await fetch(`${API}/api/playlists`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            });
             const data = await res.json();
             setPlaylists(data);
         } catch (err) { console.error(err); }
@@ -92,7 +128,11 @@ export default function Home() {
 
     async function loadLibrary() {
         try {
-            const res = await fetch(`${API}/api/library`, { credentials: "include" });
+            const res = await fetch(`${API}/api/library`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            });
             const data = await res.json();
             setLibrary(data);
         } catch (err) { console.error(err); }
@@ -100,7 +140,11 @@ export default function Home() {
 
     async function loadAiPlaylists() {
         try {
-            const res = await fetch(`${API}/api/ai-playlists`, { credentials: "include" });
+            const res = await fetch(`${API}/api/ai-playlists`, {
+                headers: {
+                    Authorization: `Bearer ${localStorage.getItem("token")}`
+                }
+            });
             const data = await res.json();
             setAiPlaylists(data);
         } catch (err) { console.error(err); }

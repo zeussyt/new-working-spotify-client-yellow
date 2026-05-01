@@ -4,8 +4,9 @@ import cors from "cors";
 import dotenv from "dotenv";
 import { generateCodeVerifier, OAuth2Client } from "@badgateway/oauth2-client";
 import fs from "fs";
-import session from "express-session";
-import FileStore from 'session-file-store'
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 //let codeVerifierGlobal = null; //need to store this in session storage
 const app = express();
 
@@ -157,8 +158,8 @@ app.get("/auth/login", async (req, res) => {
 
 app.get("/debug/token", (req, res) => {
     res.json({
-        hasToken: !!req.session.accessToken,
-        tokenPreview: req.session.accessToken?.slice(0, 20)
+        hasToken: !!req.accessToken,
+        tokenPreview: req.accessToken?.slice(0, 20)
     });
 });
 
@@ -171,34 +172,32 @@ app.get("/auth/callback", async (req, res) => {
       fullRedirectUrl,
       {
         redirectUri: process.env.SC_REDIRECT_URI,
-        codeVerifier: req.session.codeVerifier
+        codeVerifier: codeVerifierGlobal,
       }
     );
 
-    console.log("Access Token:", tokenSet.accessToken);
+    const accessToken = tokenSet.accessToken;
 
-    req.session.accessToken = tokenSet.accessToken;
+    // ✅ create JWT instead of session
+    const jwtToken = jwt.sign(
+      { accessToken },
+      JWT_SECRET,
+      { expiresIn: "7d" }
+    );
 
-    // 🔥 FORCE SESSION SAVE BEFORE REDIRECT
-    req.session.save(err => {
-      if (err) {
-        console.error("Session save failed:", err);
-        return res.status(500).send("Session error");
-      }
-
-      res.redirect("https://new-working-spotify-client-yellow.vercel.app");
-    });
+    // send user back to frontend with token
+    res.redirect(`https://new-working-spotify-client-yellow.vercel.app?token=${jwtToken}`);
 
   } catch (error) {
-    console.error("Access Token Error", error.message);
-    res.status(500).json("Authentication failed");
+    console.error("Auth error", error);
+    res.status(500).json({ error: "Authentication failed" });
   }
 });
 
 // ================= LOGIN CHECK ===============
 app.get("/api/me", (req, res) => {
   console.log("api.me is functioning")
-  if (!req.session.accessToken) {
+  if (!req.accessToken) {
     return res.status(401).json({ loggedIn: false });
   }
 
@@ -211,7 +210,7 @@ app.get("/api/search", async (req, res) => {
   const query = req.query.q;
 
   console.log("Search request:", query);
-  const token = req.session.accessToken;
+  const token = req.accessToken;
   if (!token) {
     return res.status(401).json({
       error: "Not logged in"
@@ -246,7 +245,7 @@ app.get("/api/search", async (req, res) => {
 });
 
 app.get("/api/library", async (req, res) => {
-  const token = req.session.accessToken;
+  const token = req.accessToken;
 
   if (!token) return res.status(401).json([]);
 
@@ -284,7 +283,7 @@ app.get("/api/library", async (req, res) => {
 });
 
 app.get("/api/playlists", async (req, res) => {
-    const token = req.session.accessToken;
+    const token = req.accessToken;
 
     if (!token) return res.status(401).json([]);
 
