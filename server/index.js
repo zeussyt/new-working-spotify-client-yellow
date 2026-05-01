@@ -5,6 +5,8 @@ import dotenv from "dotenv";
 import { generateCodeVerifier, OAuth2Client } from "@badgateway/oauth2-client";
 import fs from "fs";
 import jwt from "jsonwebtoken";
+const scope =
+  "user-read-email user-read-private user-library-read playlist-read-private playlist-read-collaborative user-top-read user-read-playback-state user-modify-playback-state streaming";
 
 const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
 //let codeVerifierGlobal = null; //need to store this in session storage
@@ -127,28 +129,19 @@ app.get("/auth/login", async (req, res) => {
   try {
     const codeVerifier = await generateCodeVerifier();
 
-    const scope = [
-      "user-read-email",
-      "user-read-private",
-      "user-library-read",
-      "playlist-read-private",
-      "playlist-read-collaborative",
-      "user-top-read"
-    ]
+    req.session.codeVerifier = codeVerifier;
 
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
       codeVerifier,
-      scope
+      scope, 
     });
 
-    codeVerifierGlobal = codeVerifier;
-
-    return res.redirect(uri);
+    res.redirect(uri);
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
-    return res.status(500).json({
+    res.status(500).json({
       error: "Auth login failed",
       details: err.message
     });
