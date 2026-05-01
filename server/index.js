@@ -95,7 +95,7 @@ app.get("/auth/login", async (req, res) => {
     const uri = await client.authorizationCode.getAuthorizeUri({
       redirectUri: process.env.SC_REDIRECT_URI,
       codeVerifier,
-      scope: scope.join(" "), // IMPORTANT FIX
+      scope: scope, // IMPORTANT FIX
     });
 
     console.log("AUTH URL GENERATED");
