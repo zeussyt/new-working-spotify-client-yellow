@@ -25,7 +25,7 @@ export default function Home() {
 
     const token = localStorage.getItem("spotify_access_token");
     
-    //play fix?
+    //play
     async function playTrack(uri) {
     const token = localStorage.getItem("spotify_access_token");
 
@@ -210,8 +210,8 @@ export default function Home() {
                                         //Testing to see if buttons work
                                         onClick={() => {
                                         console.log("CLICKED:", track.name);
-                                        playTrack(track.uri);}
-                                    }
+                                        play(track.uri);
+}}
                                     >
                                         ▶
                                     </button>
@@ -249,7 +249,7 @@ export default function Home() {
                 )}
 
             </div>
-            <PlayerBar track={playTrack} />
+            <PlayerBar track={track} />
         </div>
     );
 }
