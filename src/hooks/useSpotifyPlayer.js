@@ -1,15 +1,24 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function useSpotifyPlayer(token) {
     const [player, setPlayer] = useState(null);
     const [deviceId, setDeviceId] = useState(null);
     const [track, setTrack] = useState(null);
+    const [isPlaying, setIsPlaying] = useState(false); 
+
+    const playerRef = useRef(null);
 
     useEffect(() => {
         if (!token) return;
 
-        // ===================== FIX #1: GLOBAL CALLBACK (REQUIRED) =====================
-        window.onSpotifyWebPlaybackSDKReady = () => {
+        // ===================== FIX #1: WAIT FOR SDK =====================
+        if (!window.onSpotifyWebPlaybackSDKReady) {
+            window.onSpotifyWebPlaybackSDKReady = initializePlayer;
+        } else {
+            initializePlayer();
+        }
+
+        function initializePlayer() {
             console.log("Spotify SDK Ready");
 
             const p = new window.Spotify.Player({
@@ -18,12 +27,14 @@ export default function useSpotifyPlayer(token) {
                 volume: 0.5
             });
 
-            // ===================== READY EVENT =====================
+            playerRef.current = p;
+
+            // ===================== READY =====================
             p.addListener("ready", async ({ device_id }) => {
                 console.log("DEVICE READY:", device_id);
                 setDeviceId(device_id);
 
-                // ===================== FIX #2: ACTIVATE DEVICE =====================
+                // activate device
                 await fetch("https://api.spotify.com/v1/me/player", {
                     method: "PUT",
                     headers: {
@@ -39,10 +50,12 @@ export default function useSpotifyPlayer(token) {
                 console.log("DEVICE ACTIVATED");
             });
 
-            // ===================== STATE CHANGE =====================
-            p.addListener("player_state_changed", state => {
+            // ===================== STATE CHANGE (GLOBAL FIX) =====================
+            p.addListener("player_state_changed", (state) => {
                 if (!state) return;
+
                 setTrack(state.track_window.current_track);
+                setIsPlaying(!state.paused); 
             });
 
             // ===================== ERRORS =====================
@@ -63,24 +76,21 @@ export default function useSpotifyPlayer(token) {
                 console.log("PLAYER CONNECTED:", success);
             });
 
-            p.addListener("player_state_changed", state => {
-            if (!state) return;
-
-                setTrack(state.track_window.current_track);
-                setIsPlaying(!state.paused);
-                    });
-
             setPlayer(p);
+        }
+
+        // cleanup
+        return () => {
+            if (playerRef.current) {
+                playerRef.current.disconnect();
+            }
         };
     }, [token]);
 
-    // ===================== PLAY FUNCTION =====================
+    // ===================== PLAY =====================
     async function play(uri) {
         if (!deviceId) {
-            console.log("Player not ready:", {
-                deviceId,
-                tokenExists: !!token
-            });
+            console.log("Player not ready");
             return;
         }
 
@@ -98,34 +108,37 @@ export default function useSpotifyPlayer(token) {
             }
         );
     }
-// ===================== PAUSE FUNCTION =====================
+
+    // ===================== PAUSE =====================
     async function pause() {
-    if (!deviceId) {
-        console.log("No active device");
-        return;
+        if (!deviceId) return;
+
+        await fetch("https://api.spotify.com/v1/me/player/pause", {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
     }
 
-    await fetch("https://api.spotify.com/v1/me/player/pause", {
-        method: "PUT",
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-}
-// ===================== RESUME FUNCTION =====================
-async function resume() {
-    if (!deviceId) {
-        console.log("No active device");
-        return;
+    // ===================== RESUME =====================
+    async function resume() {
+        if (!deviceId) return;
+
+        await fetch("https://api.spotify.com/v1/me/player/play", {
+            method: "PUT",
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        });
     }
 
-    await fetch("https://api.spotify.com/v1/me/player/play", {
-        method: "PUT",
-        headers: {
-            Authorization: `Bearer ${token}`
-        }
-    });
-}
-
-    return { play, pause, resume, track, deviceId };
+    return {
+        play,
+        pause,
+        resume,
+        track,
+        deviceId,
+        isPlaying 
+    };
 }

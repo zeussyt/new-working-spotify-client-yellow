@@ -19,6 +19,7 @@ export default function Home() {
     const [loading, setLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [activeTab, setActiveTab] = useState("search");
+    //const [isPlaying, setIsPlaying] = useState(false);
 
     const [playlists, setPlaylists] = useState([]);
     const [aiPlaylists, setAiPlaylists] = useState([]);
@@ -26,7 +27,7 @@ export default function Home() {
     const token = localStorage.getItem("spotify_access_token");
     
     //Stop and start functions for the player
-    const { play, pause, resume, track } = useSpotifyPlayer(token);
+    const { play, pause, resume, track, isPlaying } = useSpotifyPlayer(token);
     const audioRef = useRef(null);
 
     // ================= AUTH CHECK (COOKIE BASED) =================
