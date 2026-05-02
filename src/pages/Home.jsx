@@ -25,8 +25,8 @@ export default function Home() {
 
     const token = localStorage.getItem("spotify_access_token");
     
-    //play
-    const { play, track } = useSpotifyPlayer(token);
+    //Stop and start functions for the player
+    const { play, pause, resume, track } = useSpotifyPlayer(token);
     const audioRef = useRef(null);
 
     // ================= AUTH CHECK (COOKIE BASED) =================
@@ -252,7 +252,12 @@ useEffect(() => {
                 )}
 
             </div>
-            {track && <PlayerBar track={track || null} />}
+                        {track && <PlayerBar
+                            track={track}
+                            isPlaying={isPlaying}
+                            onPause={pause}
+                            onPlay={resume}
+                                                />}
         </div>
     );
 }

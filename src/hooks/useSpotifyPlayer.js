@@ -63,6 +63,13 @@ export default function useSpotifyPlayer(token) {
                 console.log("PLAYER CONNECTED:", success);
             });
 
+            p.addListener("player_state_changed", state => {
+            if (!state) return;
+
+                setTrack(state.track_window.current_track);
+                setIsPlaying(!state.paused);
+                    });
+
             setPlayer(p);
         };
     }, [token]);
@@ -91,6 +98,34 @@ export default function useSpotifyPlayer(token) {
             }
         );
     }
+// ===================== PAUSE FUNCTION =====================
+    async function pause() {
+    if (!deviceId) {
+        console.log("No active device");
+        return;
+    }
 
-    return { play, track };
+    await fetch("https://api.spotify.com/v1/me/player/pause", {
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
+// ===================== RESUME FUNCTION =====================
+async function resume() {
+    if (!deviceId) {
+        console.log("No active device");
+        return;
+    }
+
+    await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
+
+    return { play, pause, resume, track, deviceId };
 }
