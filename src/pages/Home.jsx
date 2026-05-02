@@ -4,6 +4,12 @@ import Library from "../pages/Library";
 
 const API = import.meta.env.VITE_API_URL;
 
+// 🔥 helper to ALWAYS send token correctly
+function getAuthHeaders() {
+    const token = localStorage.getItem("token");
+    return token ? { Authorization: `Bearer ${token}` } : {};
+}
+
 export default function Home() {
     const [tracks, setTracks] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -11,7 +17,6 @@ export default function Home() {
     const [activeTab, setActiveTab] = useState("search");
 
     const [playlists, setPlaylists] = useState([]);
-    const [library, setLibrary] = useState([]);
     const [aiPlaylists, setAiPlaylists] = useState([]);
 
     const audioRef = useRef(null);
@@ -38,9 +43,7 @@ export default function Home() {
         }
 
         fetch(`${API}/api/me`, {
-            headers: {
-                Authorization: `Bearer ${token}`
-            }
+            headers: getAuthHeaders()
         })
             .then(res => {
                 if (res.ok) {
@@ -61,21 +64,28 @@ export default function Home() {
             const res = await fetch(
                 `${API}/api/search?q=${encodeURIComponent(query)}`,
                 {
-                    headers: {
-                        Authorization: `Bearer ${localStorage.getItem("token")}`
-                    }
+                    headers: getAuthHeaders()
                 }
             );
-            
-           const data = await res.json();
+
+            if (!res.ok) {
+                console.error("Search failed:", res.status);
+                setTracks([]);
+                return;
+            }
+
+            const data = await res.json();
             setTracks(Array.isArray(data) ? data : []);
+
         } catch (err) {
-            console.error(err);
+            console.error("Search error:", err);
+            setTracks([]);
         } finally {
             setLoading(false);
         }
     }
 
+    // ================= PLAY =================
     function playPreview(url) {
         if (!url) return;
 
@@ -92,43 +102,54 @@ export default function Home() {
         setIsLoggedIn(false);
         setTracks([]);
         setPlaylists([]);
-        setLibrary([]);
         setAiPlaylists([]);
     }
 
     // ================= DATA LOADERS =================
     async function loadPlaylists() {
-        const res = await fetch(`${API}/api/playlists`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
-            }
-        });
-        setPlaylists(await res.json());
-    }
+        try {
+            const res = await fetch(`${API}/api/playlists`, {
+                headers: getAuthHeaders()
+            });
 
-    async function loadLibrary() {
-        const res = await fetch(`${API}/api/library`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
+            if (!res.ok) {
+                console.error("Playlists failed:", res.status);
+                setPlaylists([]);
+                return;
             }
-        });
-        setLibrary(await res.json());
+
+            const data = await res.json();
+            setPlaylists(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("Playlists error:", err);
+            setPlaylists([]);
+        }
     }
 
     async function loadAiPlaylists() {
-        const res = await fetch(`${API}/api/ai-playlists`, {
-            headers: {
-                Authorization: `Bearer ${localStorage.getItem("token")}`
+        try {
+            const res = await fetch(`${API}/api/ai-playlists`, {
+                headers: getAuthHeaders()
+            });
+
+            if (!res.ok) {
+                console.error("AI playlists failed:", res.status);
+                setAiPlaylists([]);
+                return;
             }
-        });
-        setAiPlaylists(await res.json());
+
+            const data = await res.json();
+            setAiPlaylists(Array.isArray(data) ? data : []);
+        } catch (err) {
+            console.error("AI playlists error:", err);
+            setAiPlaylists([]);
+        }
     }
 
     useEffect(() => {
         if (!isLoggedIn) return;
 
         if (activeTab === "playlists") loadPlaylists();
-        if (activeTab === "library") loadLibrary();
         if (activeTab === "ai") loadAiPlaylists();
     }, [activeTab, isLoggedIn]);
 
@@ -189,7 +210,7 @@ export default function Home() {
                         {loading && <div style={styles.loading}>Loading...</div>}
 
                         <div style={styles.grid}>
-                            {Array.isArray(tracks) && tracks.map(track => (
+                            {tracks.map(track => (
                                 <div key={track.id} style={styles.card}>
                                     <img
                                         src={track.album?.images?.[0]?.url}
