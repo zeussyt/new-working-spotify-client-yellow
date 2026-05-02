@@ -232,10 +232,10 @@ export default function Home() {
                 )}
 
             </div>
+            //maybe right placve for player bar???
+            <PlayerBar track={track} />
         </div>
     );
-    //Could go somewhere else, but this is fine for now
-    <PlayerBar track={track} />
 }
 
 const styles = {
