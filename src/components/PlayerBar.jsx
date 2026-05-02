@@ -1,4 +1,3 @@
-export default function PlayerBar({ track }) {
 export default function PlayerBar({ track, isPlaying, onPlay, onPause }) {
     if (!track) return null;
 
@@ -23,4 +22,3 @@ export default function PlayerBar({ track, isPlaying, onPlay, onPause }) {
             <p>{track.artists[0].name}</p>
         </div>
     );
-}
