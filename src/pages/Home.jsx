@@ -249,7 +249,7 @@ export default function Home() {
                 )}
 
             </div>
-            <PlayerBar track={track} />
+            <PlayerBar track={track || null} />
         </div>
     );
 }
