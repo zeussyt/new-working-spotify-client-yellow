@@ -58,20 +58,16 @@ export default function Library({ playTrack }) {
                     <img
                         src={track.albumImage}
                         style={styles.image}
-                        onMouseEnter={() => onHover(track)}   
-                        onMouseLeave={() => onHover(null)}   
+                          
                     />
 
                     <div style={styles.info}>
                         <div style={styles.name}>
                             {track.name}
-                            onMouseEnter={() => onHover(track)}   
-                            onMouseLeave={() => onHover(null)}   
+                            
                         </div>
                         <div style={styles.artist}>
-                            {track.artists}
-                            onMouseEnter={() => onHover(track)}   
-                            onMouseLeave={() => onHover(null)}   
+                            {track.artists} 
                         </div>
                     </div>
 
