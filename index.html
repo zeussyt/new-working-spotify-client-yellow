@@ -4,15 +4,22 @@
     <meta charset="UTF-8" />
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Spotify Clone</title>
-  </head>
+    <title>soundcloud-app</title>
 
-  <body>
-    <div id="root"></div>
-
-    <!-- ✅ REQUIRED: Spotify Web Playback SDK -->
+    <!-- ===================== FIX #1: LOAD SPOTIFY SDK ===================== -->
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
 
+    <!-- ===================== FIX #2: GLOBAL CALLBACK MUST EXIST ===================== -->
+    <script>
+      window.onSpotifyWebPlaybackSDKReady = () => {
+        console.log("Spotify SDK Ready (global)");
+        window.__spotify_sdk_ready__ = true;
+      };
+    </script>
+
+  </head>
+  <body>
+    <div id="root"></div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

@@ -8,20 +8,14 @@ export default function useSpotifyPlayer(token) {
     useEffect(() => {
         if (!token) return;
 
-        const scriptId = "spotify-sdk";
+        // ===================== FIX #3: WAIT FOR SDK PROPERLY =====================
+        const waitForSDK = setInterval(() => {
+            if (!window.Spotify || !window.Spotify.Player) return;
 
-        // avoid double-loading
-        if (!document.getElementById(scriptId)) {
-            const script = document.createElement("script");
-            script.id = scriptId;
-            script.src = "https://sdk.scdn.co/spotify-player.js";
-            script.async = true;
-            document.body.appendChild(script);
-        }
+            clearInterval(waitForSDK);
 
-        window.onSpotifyWebPlaybackSDKReady = () => {
             const p = new window.Spotify.Player({
-                name: "Spotify Clone",
+                name: "My Spotify Clone",
                 getOAuthToken: cb => cb(token),
                 volume: 0.5
             });
@@ -36,13 +30,26 @@ export default function useSpotifyPlayer(token) {
                 setTrack(state.track_window.current_track);
             });
 
-            p.addListener("initialization_error", ({ message }) =>
-                console.error("INIT ERROR:", message)
-            );
+            p.addListener("initialization_error", ({ message }) => {
+                console.error("INIT ERROR:", message);
+            });
 
-            p.connect();
+            p.addListener("authentication_error", ({ message }) => {
+                console.error("AUTH ERROR:", message);
+            });
+
+            p.addListener("account_error", ({ message }) => {
+                console.error("ACCOUNT ERROR:", message);
+            });
+
+            p.connect().then(success => {
+                console.log("PLAYER CONNECTED:", success);
+            });
+
             setPlayer(p);
-        };
+        }, 500);
+
+        return () => clearInterval(waitForSDK);
     }, [token]);
 
     async function play(uri) {
@@ -55,13 +62,13 @@ export default function useSpotifyPlayer(token) {
             `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
             {
                 method: "PUT",
-                headers: {
-                    Authorization: `Bearer ${token}`,
-                    "Content-Type": "application/json"
-                },
                 body: JSON.stringify({
                     uris: [uri]
-                })
+                }),
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                }
             }
         );
     }
