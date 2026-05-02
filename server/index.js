@@ -68,7 +68,6 @@ function auth(req, res, next) {
   console.log("HEADER:", header);
 
   const token =
-    req.cookies?.token ||
     header?.split(" ")[1] ||
     req.query.token;
 
