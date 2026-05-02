@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import api from "../api"; // ✅ USE YOUR API CLIENT
+import api from "../api/api"; 
 
 export default function Library({ playTrack }) {
     const [tracks, setTracks] = useState([]);
