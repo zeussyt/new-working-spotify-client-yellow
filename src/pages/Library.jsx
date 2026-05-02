@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 //idk why this isnt working
-import api from "../api"; 
+import api from "../api/api"; 
 
 export default function Library({ playTrack }) {
     const [tracks, setTracks] = useState([]);
