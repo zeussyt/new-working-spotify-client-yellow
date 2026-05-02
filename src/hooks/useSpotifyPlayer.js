@@ -8,38 +8,41 @@ export default function useSpotifyPlayer(token) {
     useEffect(() => {
         if (!token) return;
 
-        // IMPORTANT: SDK loads globally
-        if (!window.Spotify) {
-            console.error("Spotify SDK not loaded");
-            return;
+        const scriptId = "spotify-sdk";
+
+        // avoid double-loading
+        if (!document.getElementById(scriptId)) {
+            const script = document.createElement("script");
+            script.id = scriptId;
+            script.src = "https://sdk.scdn.co/spotify-player.js";
+            script.async = true;
+            document.body.appendChild(script);
         }
 
-        const p = new window.Spotify.Player({
-            name: "Spotify Clone Player",
-            getOAuthToken: cb => cb(token),
-            volume: 0.5
-        });
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            const p = new window.Spotify.Player({
+                name: "Spotify Clone",
+                getOAuthToken: cb => cb(token),
+                volume: 0.5
+            });
 
-        p.addListener("ready", ({ device_id }) => {
-            console.log("DEVICE READY:", device_id);
-            setDeviceId(device_id);
-        });
+            p.addListener("ready", ({ device_id }) => {
+                console.log("DEVICE READY:", device_id);
+                setDeviceId(device_id);
+            });
 
-        p.addListener("not_ready", ({ device_id }) => {
-            console.log("Device offline:", device_id);
-        });
+            p.addListener("player_state_changed", state => {
+                if (!state) return;
+                setTrack(state.track_window.current_track);
+            });
 
-        p.addListener("player_state_changed", (state) => {
-            if (!state) return;
+            p.addListener("initialization_error", ({ message }) =>
+                console.error("INIT ERROR:", message)
+            );
 
-            setTrack(state.track_window?.current_track || null);
-        });
-
-        p.connect();
-
-        setPlayer(p);
-
-        return () => p.disconnect();
+            p.connect();
+            setPlayer(p);
+        };
     }, [token]);
 
     async function play(uri) {
@@ -53,8 +56,8 @@ export default function useSpotifyPlayer(token) {
             {
                 method: "PUT",
                 headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
+                    Authorization: `Bearer ${token}`,
+                    "Content-Type": "application/json"
                 },
                 body: JSON.stringify({
                     uris: [uri]
