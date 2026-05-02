@@ -1,6 +1,10 @@
+//WORKING
+
 import { useEffect, useState, useRef } from "react";
 import Search from "../components/Search";
 import Library from "../pages/Library";
+import useSpotifyPlayer from "../hooks/useSpotifyPlayer";
+import PlayerBar from "../components/PlayerBar";
 
 const API = import.meta.env.VITE_API_URL;
 
@@ -12,6 +16,9 @@ export default function Home() {
 
     const [playlists, setPlaylists] = useState([]);
     const [aiPlaylists, setAiPlaylists] = useState([]);
+
+    const token = localStorage.getItem("token");
+    const { play, track } = useSpotifyPlayer(token);
 
     const audioRef = useRef(null);
 
@@ -179,7 +186,7 @@ export default function Home() {
 
                                     <button
                                         style={styles.play}
-                                        onClick={() => playPreview(track.preview_url)}
+                                        onClick={() => play(track.uri)}
                                         disabled={!track.preview_url}
                                     >
                                         ▶
@@ -204,8 +211,8 @@ export default function Home() {
                         </div>
                     </div>
                 )}
-
-                {activeTab === "library" && <Library />}
+                    //test
+                {activeTab === "library" && <Library playTrack={play} />}
 
                 {activeTab === "ai" && (
                     <div style={styles.section}>
@@ -221,6 +228,8 @@ export default function Home() {
             </div>
         </div>
     );
+    //Could go somewhere else, but this is fine for now
+    <PlayerBar track={track} />
 }
 
 const styles = {
