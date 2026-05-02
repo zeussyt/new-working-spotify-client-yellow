@@ -210,7 +210,7 @@ export default function Home() {
                                         //Testing to see if buttons work
                                         onClick={() => {
                                         console.log("CLICKED:", track.name);
-                                        playTrack(track.uri)}
+                                        playTrack(track.uri);}
                                     }
                                     >
                                         ▶
