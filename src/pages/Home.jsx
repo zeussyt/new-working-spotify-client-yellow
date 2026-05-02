@@ -24,15 +24,12 @@ export default function Home() {
     const [aiPlaylists, setAiPlaylists] = useState([]);
 
     const token = localStorage.getItem("spotify_access_token");
-
-    // =========================================================
-    // 🎧 SPOTIFY WEB PLAYER HOOK (FIXED USAGE)
-    // =========================================================
+    
+    //play
     const { play, track } = useSpotifyPlayer(token);
-
     const audioRef = useRef(null);
 
-    // ================= AUTH CHECK =================
+    // ================= AUTH CHECK (COOKIE BASED) =================
     useEffect(() => {
         fetch(`${API}/api/me`, {
             credentials: "include"
@@ -68,7 +65,7 @@ export default function Home() {
         }
     }
 
-    // ================= LOCAL PREVIEW PLAYER =================
+    // ================= PLAY =================
     function playPreview(url) {
         if (!url) return;
 
@@ -81,6 +78,7 @@ export default function Home() {
 
     // ================= LOGOUT =================
     function handleLogout() {
+        // optional backend logout endpoint
         fetch(`${API}/auth/logout`, {
             method: "POST",
             credentials: "include"
@@ -195,16 +193,11 @@ export default function Home() {
 
                                     <button
                                         style={styles.play}
-
-                                        // =====================================================
-                                        // 🎧 FIXED: Now uses Spotify Web Playback SDK properly
-                                        // =====================================================
+                                        //Testing to see if buttons work
                                         onClick={() => {
-                                            console.log("CLICKED:", track.name);
-
-                                            // FIX: THIS is the real play function (NOT playTrack)
-                                            play(track.uri);
-                                        }}
+                                        console.log("CLICKED:", track.name);
+                                        play(track.uri);
+}}
                                     >
                                         ▶
                                     </button>
@@ -228,7 +221,6 @@ export default function Home() {
                         </div>
                     </div>
                 )}
-
                 {activeTab === "library" && (
                     // 🎧 FIX: pass correct player function
                     <Library playTrack={play} />
@@ -246,9 +238,105 @@ export default function Home() {
                 )}
 
             </div>
-
-            {/* 🎧 FIX: safe PlayerBar rendering */}
             {track && <PlayerBar track={track} />}
         </div>
     );
 }
+
+const styles = {
+    app: {
+        minHeight: "100vh",
+        background: "linear-gradient(#121212, #000)",
+        color: "#fff",
+        fontFamily: "Arial",
+        padding: "20px"
+    },
+    header: {
+        display: "flex",
+        justifyContent: "space-between",
+        alignItems: "center",
+        borderBottom: "1px solid #222",
+        paddingBottom: "10px"
+    },
+    brand: { color: "#1DB954", fontWeight: "bold" },
+    logout: {
+        background: "transparent",
+        border: "1px solid #1DB954",
+        color: "#1DB954",
+        padding: "6px 12px",
+        borderRadius: "20px",
+        cursor: "pointer"
+    },
+    tabs: { display: "flex", gap: "10px", margin: "15px 0" },
+    tab: {
+        padding: "8px 14px",
+        borderRadius: "20px",
+        border: "1px solid #1DB954",
+        cursor: "pointer"
+    },
+    grid: { display: "flex", flexDirection: "column", gap: "10px" },
+    card: {
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        background: "#181818",
+        padding: "10px",
+        borderRadius: "10px"
+    },
+    img: { width: "45px", height: "45px", borderRadius: "6px" },
+    info: { flex: 1 },
+    title: { fontWeight: "bold" },
+    artist: { fontSize: "12px", color: "#aaa" },
+    play: {
+        background: "#1DB954",
+        border: "none",
+        borderRadius: "50%",
+        width: "32px",
+        height: "32px",
+        cursor: "pointer"
+    },
+    playlistGrid: {
+        display: "grid",
+        gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
+        gap: "12px"
+    },
+    playlistCard: {
+        background: "#181818",
+        padding: "10px",
+        borderRadius: "10px"
+    },
+    playlistImg: {
+        width: "100%",
+        height: "120px",
+        objectFit: "cover",
+        borderRadius: "8px"
+    },
+    playlistName: { marginTop: "8px" },
+    aiCard: {
+        background: "#181818",
+        padding: "10px",
+        borderRadius: "10px",
+        marginTop: "10px"
+    },
+    section: { color: "#1DB954" },
+    loading: { color: "#aaa" },
+    loginPage: {
+        height: "100vh",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        background: "linear-gradient(#000, #121212)"
+    },
+    loginCard: { textAlign: "center" },
+    logo: { fontSize: "32px", color: "#1DB954" },
+    subtitle: { color: "#aaa", marginBottom: "20px" },
+    loginButton: {
+        background: "#1DB954",
+        border: "none",
+        padding: "12px 20px",
+        borderRadius: "25px",
+        fontWeight: "bold",
+        cursor: "pointer"
+    },
+    loginLink: { textDecoration: "none" }
+};
