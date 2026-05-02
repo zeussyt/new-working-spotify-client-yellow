@@ -19,7 +19,7 @@ export default function Home() {
     const [loading, setLoading] = useState(false);
     const [isLoggedIn, setIsLoggedIn] = useState(false);
     const [activeTab, setActiveTab] = useState("search");
-    //const [isPlaying, setIsPlaying] = useState(false);
+    
 
     //making things look pretty
     const [hoveredTrack, setHoveredTrack] = useState(null);
@@ -276,8 +276,10 @@ useEffect(() => {
                     </div>
                 )}
                 {activeTab === "library" && (
-                    // 🎧 FIX: pass correct player function
-                    <Library playTrack={play} />
+                   <Library
+                            playTrack={play}
+                            onHover={setHoveredTrack}   
+                    />
                 )}
 
                 {activeTab === "ai" && (
@@ -292,6 +294,21 @@ useEffect(() => {
                 )}
 
             </div>
+            {hoveredTrack && (
+    <div style={styles.hoverPreview}>
+        <img
+            src={hoveredTrack.album?.images?.[0]?.url}
+            style={styles.hoverImage}
+        />
+
+        <div style={styles.hoverText}>
+            <div style={styles.hoverTitle}>{hoveredTrack.name}</div>
+            <div style={styles.hoverArtist}>
+                {hoveredTrack.artists?.[0]?.name}
+            </div>
+        </div>
+    </div>
+)}
                         {track && <PlayerBar
                             track={track}
                             isPlaying={isPlaying}
@@ -336,6 +353,9 @@ const styles = {
     grid: { display: "flex", flexDirection: "column", gap: "10px" },
     card: {
         display: "flex",
+        //make go up
+        position: "relative",
+        zIndex: 1,
         alignItems: "center",
         gap: "10px",
         background: "#181818",
@@ -425,5 +445,43 @@ previewPlay: {
     cursor: "pointer",
     width: "100%"
 },
+
+hoverPreview: {
+    position: "fixed",
+    bottom: "100px",
+    right: "20px",
+    display: "flex",
+    gap: "12px",
+    background: "#181818",
+    padding: "12px",
+    borderRadius: "12px",
+    boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
+
+    zIndex: 999999   
+},
+
+hoverImage: {
+    width: "80px",
+    height: "80px",
+    borderRadius: "8px",
+    objectFit: "cover"
+},
+
+hoverText: {
+    display: "flex",
+    flexDirection: "column",
+    justifyContent: "center"
+},
+
+hoverTitle: {
+    fontWeight: "bold"
+},
+
+hoverArtist: {
+    fontSize: "12px",
+    color: "#aaa"
+},
     loginLink: { textDecoration: "none" }
+
+    
 };

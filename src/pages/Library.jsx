@@ -1,11 +1,19 @@
 import { useEffect, useState } from "react";
-const API = import.meta.env.VITE_API_URL;
+import api from "../api"; // ✅ USE YOUR API CLIENT
 
 export default function Library({ playTrack }) {
     const [tracks, setTracks] = useState([]);
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
+        const token = localStorage.getItem("token");
+
+        // ✅ PREVENT REQUEST WITHOUT TOKEN (fixes your 401 spam)
+        if (!token) {
+            setLoading(false);
+            return;
+        }
+
         loadLibrary();
     }, []);
 
@@ -13,13 +21,12 @@ export default function Library({ playTrack }) {
         setLoading(true);
 
         try {
-            const res = await fetch(`${API}/api/library`, { credentials: "include" })
+            const data = await api.get("/api/library");
 
-            const data = await res.json();
-
-            console.log("LIBRARY (10 songs):", data);
+            console.log("LIBRARY DATA:", data);
 
             setTracks(Array.isArray(data) ? data : []);
+
         } catch (err) {
             console.error("Library error:", err);
             setTracks([]);
@@ -30,55 +37,46 @@ export default function Library({ playTrack }) {
 
     if (loading) {
         return (
-            <div style={{ color: "white", padding: 20 }}>
+            <div style={styles.loading}>
                 Loading library...
             </div>
         );
     }
 
     return (
-        <div style={{ color: "white", padding: 10 }}>
-            <h2 style={{ color: "#1DB954" }}>
-                Recently Added (Top 10)
+        <div style={styles.container}>
+            <h2 style={styles.title}>
+                Recently Added
             </h2>
 
+            {tracks.length === 0 && (
+                <div style={styles.empty}>No tracks found.</div>
+            )}
+
             {tracks.map(track => (
-                <div
-                    key={track.id}
-                    style={{
-                        display: "flex",
-                        alignItems: "center",
-                        gap: 10,
-                        padding: 10,
-                        background: "#181818",
-                        marginBottom: 8,
-                        borderRadius: 8
-                    }}
-                >
+                <div key={track.id} style={styles.card}>
                     <img
                         src={track.albumImage}
-                        width={40}
-                        height={40}
-                        style={{ borderRadius: 4 }}
+                        style={styles.image}
+                        onMouseEnter={() => onHover(track)}   
+                        onMouseLeave={() => onHover(null)}   
                     />
 
-                    <div style={{ flex: 1 }}>
-                        <div style={{ fontWeight: "bold" }}>
+                    <div style={styles.info}>
+                        <div style={styles.name}>
                             {track.name}
+                            onMouseEnter={() => onHover(track)}   
+                            onMouseLeave={() => onHover(null)}   
                         </div>
-                        <div style={{ fontSize: 12, opacity: 0.7 }}>
+                        <div style={styles.artist}>
                             {track.artists}
+                            onMouseEnter={() => onHover(track)}   
+                            onMouseLeave={() => onHover(null)}   
                         </div>
                     </div>
 
                     <button
-                        style={{
-                            background: "#1DB954",
-                            border: "none",
-                            borderRadius: 20,
-                            padding: "6px 10px",
-                            cursor: "pointer"
-                        }}
+                        style={styles.play}
                         onClick={() => playTrack?.(track.uri)}
                     >
                         ▶
@@ -88,3 +86,67 @@ export default function Library({ playTrack }) {
         </div>
     );
 }
+
+/* ================= STYLES ================= */
+
+const styles = {
+    container: {
+        color: "white",
+        padding: "10px"
+    },
+
+    title: {
+        color: "#1DB954",
+        marginBottom: "10px"
+    },
+
+    loading: {
+        color: "#aaa",
+        padding: "20px"
+    },
+
+    empty: {
+        color: "#777",
+        padding: "10px"
+    },
+
+    card: {
+        display: "flex",
+        alignItems: "center",
+        gap: "10px",
+        padding: "10px",
+        background: "#181818",
+        marginBottom: "8px",
+        borderRadius: "10px",
+        transition: "0.2s"
+    },
+
+    image: {
+        width: "45px",
+        height: "45px",
+        borderRadius: "6px",
+        objectFit: "cover"
+    },
+
+    info: {
+        flex: 1
+    },
+
+    name: {
+        fontWeight: "bold"
+    },
+
+    artist: {
+        fontSize: "12px",
+        color: "#aaa"
+    },
+
+    play: {
+        background: "#1DB954",
+        border: "none",
+        borderRadius: "50%",
+        width: "32px",
+        height: "32px",
+        cursor: "pointer"
+    }
+};
