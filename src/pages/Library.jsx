@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
-//idk why this isnt working
-import api from "../api/api"; 
+import api from "../api"; // ✅ USE YOUR API CLIENT
 
 export default function Library({ playTrack }) {
     const [tracks, setTracks] = useState([]);
@@ -9,6 +8,7 @@ export default function Library({ playTrack }) {
     useEffect(() => {
         const token = localStorage.getItem("token");
 
+        // ✅ PREVENT REQUEST WITHOUT TOKEN (fixes your 401 spam)
         if (!token) {
             setLoading(false);
             return;
@@ -58,16 +58,14 @@ export default function Library({ playTrack }) {
                     <img
                         src={track.albumImage}
                         style={styles.image}
-                          
                     />
 
                     <div style={styles.info}>
                         <div style={styles.name}>
                             {track.name}
-                            
                         </div>
                         <div style={styles.artist}>
-                            {track.artists} 
+                            {track.artists}
                         </div>
                     </div>
 
