@@ -6,14 +6,14 @@ export default function Library({ playTrack }) {
     const [loading, setLoading] = useState(true);
 
     useEffect(() => {
-        const token = localStorage.getItem("token");
+        //fixing library
+        const token = localStorage.getItem("spotify_access_token");
 
         // ✅ PREVENT REQUEST WITHOUT TOKEN (fixes your 401 spam)
         if (!token) {
             setLoading(false);
             return;
         }
-
         loadLibrary();
     }, []);
 
