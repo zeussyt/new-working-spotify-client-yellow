@@ -120,6 +120,20 @@ export default function Home() {
         if (activeTab === "ai") loadAiPlaylists();
     }, [activeTab, isLoggedIn]);
 
+    // ================= STORE SPOTIFY TOKEN FROM URL =================
+// 🔥 ADD THIS useEffect (VERY IMPORTANT)
+useEffect(() => {
+    const params = new URLSearchParams(window.location.search);
+    const token = params.get("access_token");
+
+    if (token) {
+        localStorage.setItem("spotify_access_token", token);
+
+        // clean URL so it doesn't keep re-running
+        window.history.replaceState({}, document.title, "/");
+    }
+}, []);
+
     // ================= LOGIN SCREEN =================
     if (!isLoggedIn) {
         return (

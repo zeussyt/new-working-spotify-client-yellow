@@ -136,7 +136,9 @@ app.get("/auth/callback", async (req, res) => {
     res.clearCookie("code_verifier", { path: "/" });
 
     //possible SDK fix
-    return res.redirect(`${process.env.FRONTEND_URL}?token=${tokenSet.accessToken}`);
+    //return res.redirect(`${process.env.FRONTEND_URL}?token=${tokenSet.accessToken}`);
+    res.redirect(
+  `https://new-working-spotify-client-yellow.vercel.app/?access_token=${tokenSet.accessToken}`);
 
   } catch (error) {
     console.error("AUTH CALLBACK ERROR:", error);

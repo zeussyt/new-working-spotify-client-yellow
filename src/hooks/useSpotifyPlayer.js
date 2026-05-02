@@ -8,11 +8,9 @@ export default function useSpotifyPlayer(token) {
     useEffect(() => {
         if (!token) return;
 
-        // ===================== FIX #3: WAIT FOR SDK PROPERLY =====================
-        const waitForSDK = setInterval(() => {
-            if (!window.Spotify || !window.Spotify.Player) return;
-
-            clearInterval(waitForSDK);
+        // ===================== FIX #1: ENSURE GLOBAL CALLBACK EXISTS =====================
+        window.onSpotifyWebPlaybackSDKReady = () => {
+            console.log("Spotify SDK Ready");
 
             const p = new window.Spotify.Player({
                 name: "My Spotify Clone",
@@ -20,79 +18,95 @@ export default function useSpotifyPlayer(token) {
                 volume: 0.5
             });
 
-            p.addListener("ready", ({ device_id }) => {
-            console.log("DEVICE READY:", device_id);
-            setDeviceId(device_id);
-            setReady(true);
+            // ===================== READY =====================
+            p.addListener("ready", async ({ device_id }) => {
+                console.log("DEVICE READY:", device_id);
+                setDeviceId(device_id);
 
-    // ===================== FIX #4: ACTIVATE DEVICE =====================
-    const token = localStorage.getItem("spotify_access_token");
+                // ===================== FIX #2: ACTIVATE DEVICE PROPERLY =====================
+                try {
+                    await fetch("https://api.spotify.com/v1/me/player", {
+                        method: "PUT",
+                        headers: {
+                            "Content-Type": "application/json",
+                            Authorization: `Bearer ${token}`
+                        },
+                        body: JSON.stringify({
+                            device_ids: [device_id],
+                            play: false
+                        })
+                    });
 
-    await fetch("https://api.spotify.com/v1/me/player", {
-        method: "PUT",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${token}`
-        },
-        body: JSON.stringify({
-            device_ids: [device_id],
-            play: false
-        })
-    });
+                    console.log("DEVICE ACTIVATED");
+                } catch (err) {
+                    console.error("Device activation failed:", err);
+                }
+            });
 
-    console.log("DEVICE ACTIVATED");
-});
-
-            p.addListener("player_state_changed", state => {
+            // ===================== STATE CHANGE =====================
+            p.addListener("player_state_changed", (state) => {
                 if (!state) return;
                 setTrack(state.track_window.current_track);
             });
 
-            p.addListener("initialization_error", ({ message }) => {
-                console.error("INIT ERROR:", message);
-            });
+            // ===================== ERRORS =====================
+            p.addListener("initialization_error", ({ message }) =>
+                console.error("INIT ERROR:", message)
+            );
 
-            p.addListener("authentication_error", ({ message }) => {
-                console.error("AUTH ERROR:", message);
-            });
+            p.addListener("authentication_error", ({ message }) =>
+                console.error("AUTH ERROR:", message)
+            );
 
-            p.addListener("account_error", ({ message }) => {
-                console.error("ACCOUNT ERROR:", message);
-            });
+            p.addListener("account_error", ({ message }) =>
+                console.error("ACCOUNT ERROR:", message)
+            );
 
+            // ===================== CONNECT =====================
             p.connect().then(success => {
                 console.log("PLAYER CONNECTED:", success);
             });
 
             setPlayer(p);
-        }, 500);
+        };
 
-        return () => clearInterval(waitForSDK);
+        // ===================== FIX #3: LOAD SCRIPT ONLY ONCE =====================
+        if (!window.Spotify) {
+            const script = document.createElement("script");
+            script.src = "https://sdk.scdn.co/spotify-player.js";
+            script.async = true;
+            document.body.appendChild(script);
+        }
     }, [token]);
 
+    // ===================== PLAY FUNCTION =====================
     async function play(uri) {
         if (!deviceId) {
-    console.log("Player not ready:", {
-        deviceId,
-        tokenExists: !!token
-    });
-    return;
-}
+            console.log("Player not ready:", {
+                deviceId,
+                tokenExists: !!token
+            });
+            return;
+        }
 
-        await fetch(
-            `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
-            {
-                method: "PUT",
-                body: JSON.stringify({
-                    uris: [uri]
-                }),
-                headers: {
-                    "Content-Type": "application/json",
-                    Authorization: `Bearer ${token}`
+        try {
+            await fetch(
+                `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
+                {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        uris: [uri]
+                    })
                 }
-            }
-        );
+            );
+        } catch (err) {
+            console.error("Play failed:", err);
+        }
     }
 
-    return { play, track };
+    return { play, track, deviceId };
 }

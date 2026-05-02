@@ -9,6 +9,12 @@
     <!-- ===================== FIX #1: LOAD SPOTIFY SDK ===================== -->
     <script src="https://sdk.scdn.co/spotify-player.js"></script>
 
+    <script>
+  window.onSpotifyWebPlaybackSDKReady = () => {
+    window.dispatchEvent(new Event("spotify-sdk-ready"));
+  };
+</script>
+
     <!-- ===================== FIX #2: GLOBAL CALLBACK MUST EXIST ===================== -->
     <script>
       window.onSpotifyWebPlaybackSDKReady = () => {
