@@ -224,10 +224,16 @@ app.get("/api/library", auth, async (req, res) => {
 
     res.json(items);
 
-  } catch (err) {
-  console.error("SEARCH ERROR:");
+  } 
+  //error testing
+  catch (err) {
+  console.error("LIBRARY ERROR:");
   console.error("Status:", err.response?.status);
   console.error("Data:", err.response?.data);
+
+  if (err.response?.status === 401) {
+    return res.status(401).json({ loggedIn: false });
+  }
 
   res.json([]);
 }
