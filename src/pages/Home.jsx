@@ -192,8 +192,11 @@ export default function Home() {
 
                                     <button
                                         style={styles.play}
-                                        onClick={() => play(track.uri)}
-                                        disabled={!track.preview_url}
+                                        //Testing to see if buttons work
+                                        onClick={() => {
+                                        console.log("CLICKED:", track.name);
+                                        play(track.uri);
+}}
                                     >
                                         ▶
                                     </button>
