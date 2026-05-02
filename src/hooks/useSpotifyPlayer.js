@@ -20,10 +20,27 @@ export default function useSpotifyPlayer(token) {
                 volume: 0.5
             });
 
-            p.addListener("ready", ({ device_id }) => {
-                console.log("DEVICE READY:", device_id);
-                setDeviceId(device_id);
-            });
+            p.addListener("ready", async ({ device_id }) => {
+    console.log("DEVICE READY:", device_id);
+    setDeviceId(device_id);
+
+    // ===================== FIX #4: ACTIVATE DEVICE =====================
+    const token = localStorage.getItem("spotify_access_token");
+
+    await fetch("https://api.spotify.com/v1/me/player", {
+        method: "PUT",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`
+        },
+        body: JSON.stringify({
+            device_ids: [device_id],
+            play: false
+        })
+    });
+
+    console.log("DEVICE ACTIVATED");
+});
 
             p.addListener("player_state_changed", state => {
                 if (!state) return;
@@ -53,10 +70,13 @@ export default function useSpotifyPlayer(token) {
     }, [token]);
 
     async function play(uri) {
-        if (!deviceId || !token) {
-            console.log("Player not ready");
-            return;
-        }
+        if (!deviceId) {
+    console.log("Player not ready:", {
+        deviceId,
+        tokenExists: !!token
+    });
+    return;
+}
 
         await fetch(
             `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
