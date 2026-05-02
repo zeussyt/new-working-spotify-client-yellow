@@ -60,7 +60,6 @@ const client = new OAuth2Client({
 // ================= AUTH MIDDLEWARE =================
 
 
-//auth middleware test fix
 function auth(req, res, next) {
   const token = req.cookies.access_token;
 
@@ -127,8 +126,8 @@ app.get("/auth/callback", async (req, res) => {
       }
     );
 
-    //http cookie test fix
-    res.cookie("token", jwtToken, {
+    // ✅ STORE SPOTIFY TOKEN DIRECTLY (no JWT)
+    res.cookie("access_token", tokenSet.accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
@@ -139,6 +138,7 @@ app.get("/auth/callback", async (req, res) => {
 
   } catch (error) {
     console.error("AUTH CALLBACK ERROR:", error);
+
     return res.status(500).json({
       error: "Authentication failed",
       details: error.message
