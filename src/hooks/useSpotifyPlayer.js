@@ -20,9 +20,10 @@ export default function useSpotifyPlayer(token) {
                 volume: 0.5
             });
 
-            p.addListener("ready", async ({ device_id }) => {
-    console.log("DEVICE READY:", device_id);
-    setDeviceId(device_id);
+            p.addListener("ready", ({ device_id }) => {
+            console.log("DEVICE READY:", device_id);
+            setDeviceId(device_id);
+            setReady(true);
 
     // ===================== FIX #4: ACTIVATE DEVICE =====================
     const token = localStorage.getItem("spotify_access_token");

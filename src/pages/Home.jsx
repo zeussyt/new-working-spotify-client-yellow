@@ -238,7 +238,7 @@ export default function Home() {
                 )}
 
             </div>
-            {track && <PlayerBar track={track} />}
+            {track && <PlayerBar track={track || null} />}
         </div>
     );
 }
