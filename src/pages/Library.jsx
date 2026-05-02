@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
-import api from "../api"; // ✅ USE YOUR API CLIENT
+//idk why this isnt working
+//import api from "../api"; // ✅ USE YOUR API CLIENT
 
 export default function Library({ playTrack }) {
     const [tracks, setTracks] = useState([]);
@@ -8,7 +9,6 @@ export default function Library({ playTrack }) {
     useEffect(() => {
         const token = localStorage.getItem("token");
 
-        // ✅ PREVENT REQUEST WITHOUT TOKEN (fixes your 401 spam)
         if (!token) {
             setLoading(false);
             return;
