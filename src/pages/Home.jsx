@@ -21,6 +21,9 @@ export default function Home() {
     const [activeTab, setActiveTab] = useState("search");
     //const [isPlaying, setIsPlaying] = useState(false);
 
+    //making things look pretty
+    const [hoveredTrack, setHoveredTrack] = useState(null);
+
     const [playlists, setPlaylists] = useState([]);
     const [aiPlaylists, setAiPlaylists] = useState([]);
 
@@ -187,13 +190,49 @@ useEffect(() => {
             <div style={styles.content}>
 
                 {activeTab === "search" && (
+                    
                     <>
+                    
+                    {hoveredTrack && (
+    <div style={styles.previewPanel}>
+        <img
+            src={hoveredTrack.album?.images?.[0]?.url}
+            style={styles.previewImg}
+        />
+
+        <div>
+            <h2>{hoveredTrack.name}</h2>
+            <p>{hoveredTrack.artists?.[0]?.name}</p>
+        </div>
+
+        <button
+            style={styles.previewPlay}
+            onClick={() => playTrack(hoveredTrack.uri)}
+        >
+            ▶ Play
+        </button>
+    </div>
+)}
                         <Search onSearch={handleSearch} />
                         {loading && <div style={styles.loading}>Loading...</div>}
 
                         <div style={styles.grid}>
                             {tracks.map(track => (
-                                <div key={track.id} style={styles.card}>
+                                //MAKING IT COOLER WITH HOVER EFFECTS
+                                <div
+                                        key={track.id}
+                                        style={{
+                                                ...styles.card,
+                                                transform: hoveredTrack?.id
+                                                 === track.id ? 
+                                                 "scale(1.03)" : "scale(1)",
+                                                transition: "0.15s ease",
+                                                border: hoveredTrack?.id 
+                                                === track.id ? 
+                                                "1px solid #1DB954" : "1px solid transparent"
+                                                }}
+                                                onMouseEnter={() => setHoveredTrack(track)}
+                                                onMouseLeave={() => setHoveredTrack(null)}>                                                        
                                     <img
                                         src={track.album?.images?.[0]?.url}
                                         style={styles.img}
@@ -358,5 +397,33 @@ const styles = {
         fontWeight: "bold",
         cursor: "pointer"
     },
+
+    previewPanel: {
+    position: "fixed",
+    right: "40px",
+    top: "120px",
+    width: "300px",
+    background: "#181818",
+    borderRadius: "12px",
+    padding: "15px",
+    border: "1px solid #1DB954",
+    boxShadow: "0 0 20px rgba(0,0,0,0.6)"
+},
+
+previewImg: {
+    width: "100%",
+    borderRadius: "10px",
+    marginBottom: "10px"
+},
+
+previewPlay: {
+    marginTop: "10px",
+    background: "#1DB954",
+    border: "none",
+    padding: "10px",
+    borderRadius: "20px",
+    cursor: "pointer",
+    width: "100%"
+},
     loginLink: { textDecoration: "none" }
 };
