@@ -59,20 +59,35 @@ const client = new OAuth2Client({
 
 // ================= AUTH MIDDLEWARE =================
 
+
+//auth middleware test fix
 function auth(req, res, next) {
+  console.log("---- AUTH CHECK ----");
+
+  const header = req.headers.authorization;
+  console.log("HEADER:", header);
+
+  const token =
+    req.cookies?.token ||
+    header?.split(" ")[1] ||
+    req.query.token;
+
+  console.log("TOKEN:", token);
+
+  if (!token) {
+    console.log("❌ NO TOKEN");
+    return res.status(401).json({ loggedIn: false });
+  }
+
   try {
-    const token =
-      req.cookies?.token ||
-      req.headers.authorization?.split(" ")[1] ||
-      req.query.token;
-
-    if (!token) return res.status(401).json({ loggedIn: false });
-
     const decoded = jwt.verify(token, JWT_SECRET);
-    req.accessToken = decoded.accessToken;
+    console.log("✅ TOKEN VALID");
 
+    req.accessToken = decoded.accessToken;
     next();
+
   } catch (err) {
+    console.log("❌ TOKEN INVALID:", err.message);
     return res.status(401).json({ loggedIn: false });
   }
 }
