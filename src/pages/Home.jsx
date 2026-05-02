@@ -7,7 +7,7 @@ const API = import.meta.env.VITE_API_URL;
 // 🔥 helper to ALWAYS send token correctly
 function getAuthHeaders() {
     const token = localStorage.getItem("token");
-    return token ? { Authorization: `Bearer ${token}` } : {};
+    return token ? { credentials: "include" } : {};
 }
 
 export default function Home() {

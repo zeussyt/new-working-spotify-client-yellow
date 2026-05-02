@@ -27,7 +27,7 @@ const app = express();
 // ================= MIDDLEWARE =================
 
 app.use(cors({
-  origin: "https://new-working-spotify-client-yellow.vercel.app",
+  origin: process.env.FRONTEND_URL,
   credentials: true
 }));
 
@@ -62,33 +62,14 @@ const client = new OAuth2Client({
 
 //auth middleware test fix
 function auth(req, res, next) {
-  console.log("---- AUTH CHECK ----");
-
-  const header = req.headers.authorization;
-  console.log("HEADER:", header);
-
-  const token =
-    header?.split(" ")[1] ||
-    req.query.token;
-
-  console.log("TOKEN:", token);
+  const token = req.cookies.access_token;
 
   if (!token) {
-    console.log("❌ NO TOKEN");
-    return res.status(401).json({ loggedIn: false });
+    return res.status(401).json({ error: "No token" });
   }
 
-  try {
-    const decoded = jwt.verify(token, JWT_SECRET);
-    console.log("✅ TOKEN VALID");
-
-    req.accessToken = decoded.accessToken;
-    next();
-
-  } catch (err) {
-    console.log("❌ TOKEN INVALID:", err.message);
-    return res.status(401).json({ loggedIn: false });
-  }
+  req.accessToken = token;
+  next();
 }
 
 // ================= LOGIN =================
@@ -146,14 +127,7 @@ app.get("/auth/callback", async (req, res) => {
       }
     );
 
-    const jwtToken = jwt.sign(
-      { accessToken: tokenSet.accessToken },
-      JWT_SECRET,
-      { expiresIn: "7d" }
-    );
-//possible cookie fix
-    return res.redirect(`${process.env.FRONTEND_URL}?token=${jwtToken}`);
-
+    //http cookie test fix
     res.cookie("token", jwtToken, {
       httpOnly: true,
       secure: true,
