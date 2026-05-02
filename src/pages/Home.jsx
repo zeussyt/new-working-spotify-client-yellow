@@ -24,7 +24,22 @@ export default function Home() {
     const [aiPlaylists, setAiPlaylists] = useState([]);
 
     const token = localStorage.getItem("spotify_access_token");
-    const { play, track } = useSpotifyPlayer(token);
+    
+    //play fix?
+    async function playTrack(uri) {
+    const token = localStorage.getItem("spotify_access_token");
+
+    await fetch("https://api.spotify.com/v1/me/player/play", {
+        method: "PUT",
+        headers: {
+            Authorization: `Bearer ${token}`,
+            "Content-Type": "application/json"
+        },
+        body: JSON.stringify({
+            uris: [uri]
+        })
+    });
+}
 
     const audioRef = useRef(null);
 
@@ -195,8 +210,8 @@ export default function Home() {
                                         //Testing to see if buttons work
                                         onClick={() => {
                                         console.log("CLICKED:", track.name);
-                                        play(track.uri);
-}}
+                                        playTrack(track.uri)}
+                                    }
                                     >
                                         ▶
                                     </button>
