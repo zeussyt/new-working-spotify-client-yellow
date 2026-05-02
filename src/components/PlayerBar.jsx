@@ -1,18 +1,11 @@
 export default function PlayerBar({ track }) {
+    if (!track) return null;
+
     return (
-        <div style={{
-            position: "fixed",
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: "80px",
-            background: "#181818",
-            color: "white",
-            display: "flex",
-            alignItems: "center",
-            padding: "10px"
-        }}>
-            {track?.name || "Nothing playing"}
+        <div>
+            <img src={track.album.images[0].url} />
+            <p>{track.name}</p>
+            <p>{track.artists[0].name}</p>
         </div>
     );
 }
