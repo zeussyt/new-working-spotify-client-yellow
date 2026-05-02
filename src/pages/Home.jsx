@@ -217,7 +217,6 @@ export default function Home() {
                         </div>
                     </div>
                 )}
-                    //test
                 {activeTab === "library" && <Library playTrack={play} />}
 
                 {activeTab === "ai" && (
@@ -232,7 +231,6 @@ export default function Home() {
                 )}
 
             </div>
-            //maybe right placve for player bar???
             <PlayerBar track={track} />
         </div>
     );
