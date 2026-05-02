@@ -8,7 +8,7 @@ export default function useSpotifyPlayer(token) {
     useEffect(() => {
         if (!token) return;
 
-        // ===================== FIX #1: ENSURE GLOBAL CALLBACK EXISTS =====================
+        // ===================== FIX #1: GLOBAL CALLBACK (REQUIRED) =====================
         window.onSpotifyWebPlaybackSDKReady = () => {
             console.log("Spotify SDK Ready");
 
@@ -18,33 +18,29 @@ export default function useSpotifyPlayer(token) {
                 volume: 0.5
             });
 
-            // ===================== READY =====================
+            // ===================== READY EVENT =====================
             p.addListener("ready", async ({ device_id }) => {
                 console.log("DEVICE READY:", device_id);
                 setDeviceId(device_id);
 
-                // ===================== FIX #2: ACTIVATE DEVICE PROPERLY =====================
-                try {
-                    await fetch("https://api.spotify.com/v1/me/player", {
-                        method: "PUT",
-                        headers: {
-                            "Content-Type": "application/json",
-                            Authorization: `Bearer ${token}`
-                        },
-                        body: JSON.stringify({
-                            device_ids: [device_id],
-                            play: false
-                        })
-                    });
+                // ===================== FIX #2: ACTIVATE DEVICE =====================
+                await fetch("https://api.spotify.com/v1/me/player", {
+                    method: "PUT",
+                    headers: {
+                        "Content-Type": "application/json",
+                        Authorization: `Bearer ${token}`
+                    },
+                    body: JSON.stringify({
+                        device_ids: [device_id],
+                        play: false
+                    })
+                });
 
-                    console.log("DEVICE ACTIVATED");
-                } catch (err) {
-                    console.error("Device activation failed:", err);
-                }
+                console.log("DEVICE ACTIVATED");
             });
 
             // ===================== STATE CHANGE =====================
-            p.addListener("player_state_changed", (state) => {
+            p.addListener("player_state_changed", state => {
                 if (!state) return;
                 setTrack(state.track_window.current_track);
             });
@@ -69,14 +65,6 @@ export default function useSpotifyPlayer(token) {
 
             setPlayer(p);
         };
-
-        // ===================== FIX #3: LOAD SCRIPT ONLY ONCE =====================
-        if (!window.Spotify) {
-            const script = document.createElement("script");
-            script.src = "https://sdk.scdn.co/spotify-player.js";
-            script.async = true;
-            document.body.appendChild(script);
-        }
     }, [token]);
 
     // ===================== PLAY FUNCTION =====================
@@ -89,24 +77,20 @@ export default function useSpotifyPlayer(token) {
             return;
         }
 
-        try {
-            await fetch(
-                `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
-                {
-                    method: "PUT",
-                    headers: {
-                        "Content-Type": "application/json",
-                        Authorization: `Bearer ${token}`
-                    },
-                    body: JSON.stringify({
-                        uris: [uri]
-                    })
-                }
-            );
-        } catch (err) {
-            console.error("Play failed:", err);
-        }
+        await fetch(
+            `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,
+            {
+                method: "PUT",
+                headers: {
+                    "Content-Type": "application/json",
+                    Authorization: `Bearer ${token}`
+                },
+                body: JSON.stringify({
+                    uris: [uri]
+                })
+            }
+        );
     }
 
-    return { play, track, deviceId };
+    return { play, track };
 }
