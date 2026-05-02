@@ -6,7 +6,13 @@ import Library from "../pages/Library";
 import useSpotifyPlayer from "../hooks/useSpotifyPlayer";
 import PlayerBar from "../components/PlayerBar";
 
-const API = import.meta.env.VITE_API_URL;
+// ================== API URL CONFIG ==================
+const API =
+  typeof import.meta !== "undefined" &&
+  import.meta.env &&
+  import.meta.env.VITE_API_URL
+    ? import.meta.env.VITE_API_URL
+    : "http://localhost:3001";
 
 export default function Home() {
     const [tracks, setTracks] = useState([]);
