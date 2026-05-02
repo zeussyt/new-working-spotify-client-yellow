@@ -4,12 +4,6 @@ import Library from "../pages/Library";
 
 const API = import.meta.env.VITE_API_URL;
 
-// 🔥 helper to ALWAYS send token correctly
-function getAuthHeaders() {
-    const token = localStorage.getItem("token");
-    return token ? { credentials: "include" } : {};
-}
-
 export default function Home() {
     const [tracks, setTracks] = useState([]);
     const [loading, setLoading] = useState(false);
@@ -21,38 +15,12 @@ export default function Home() {
 
     const audioRef = useRef(null);
 
-    // ================= TOKEN HANDLER =================
+    // ================= AUTH CHECK (COOKIE BASED) =================
     useEffect(() => {
-        const params = new URLSearchParams(window.location.search);
-        const token = params.get("token");
-
-        if (token) {
-            localStorage.setItem("token", token);
-            window.history.replaceState({}, document.title, "/");
-            setIsLoggedIn(true);
-        }
-    }, []);
-
-    // ================= AUTH CHECK =================
-    useEffect(() => {
-        const token = localStorage.getItem("token");
-
-        if (!token) {
-            setIsLoggedIn(false);
-            return;
-        }
-
         fetch(`${API}/api/me`, {
-            headers: getAuthHeaders()
+            credentials: "include"
         })
-            .then(res => {
-                if (res.ok) {
-                    setIsLoggedIn(true);
-                } else {
-                    localStorage.removeItem("token");
-                    setIsLoggedIn(false);
-                }
-            })
+            .then(res => setIsLoggedIn(res.ok))
             .catch(() => setIsLoggedIn(false));
     }, []);
 
@@ -64,21 +32,19 @@ export default function Home() {
             const res = await fetch(
                 `${API}/api/search?q=${encodeURIComponent(query)}`,
                 {
-                    headers: getAuthHeaders()
+                    credentials: "include"
                 }
             );
 
             if (!res.ok) {
-                console.error("Search failed:", res.status);
                 setTracks([]);
                 return;
             }
 
             const data = await res.json();
             setTracks(Array.isArray(data) ? data : []);
-
         } catch (err) {
-            console.error("Search error:", err);
+            console.error(err);
             setTracks([]);
         } finally {
             setLoading(false);
@@ -98,7 +64,12 @@ export default function Home() {
 
     // ================= LOGOUT =================
     function handleLogout() {
-        localStorage.removeItem("token");
+        // optional backend logout endpoint
+        fetch(`${API}/auth/logout`, {
+            method: "POST",
+            credentials: "include"
+        });
+
         setIsLoggedIn(false);
         setTracks([]);
         setPlaylists([]);
@@ -107,43 +78,25 @@ export default function Home() {
 
     // ================= DATA LOADERS =================
     async function loadPlaylists() {
-        try {
-            const res = await fetch(`${API}/api/playlists`, {
-                headers: getAuthHeaders()
-            });
+        const res = await fetch(`${API}/api/playlists`, {
+            credentials: "include"
+        });
 
-            if (!res.ok) {
-                console.error("Playlists failed:", res.status);
-                setPlaylists([]);
-                return;
-            }
+        if (!res.ok) return setPlaylists([]);
 
-            const data = await res.json();
-            setPlaylists(Array.isArray(data) ? data : []);
-        } catch (err) {
-            console.error("Playlists error:", err);
-            setPlaylists([]);
-        }
+        const data = await res.json();
+        setPlaylists(Array.isArray(data) ? data : []);
     }
 
     async function loadAiPlaylists() {
-        try {
-            const res = await fetch(`${API}/api/ai-playlists`, {
-                headers: getAuthHeaders()
-            });
+        const res = await fetch(`${API}/api/ai-playlists`, {
+            credentials: "include"
+        });
 
-            if (!res.ok) {
-                console.error("AI playlists failed:", res.status);
-                setAiPlaylists([]);
-                return;
-            }
+        if (!res.ok) return setAiPlaylists([]);
 
-            const data = await res.json();
-            setAiPlaylists(Array.isArray(data) ? data : []);
-        } catch (err) {
-            console.error("AI playlists error:", err);
-            setAiPlaylists([]);
-        }
+        const data = await res.json();
+        setAiPlaylists(Array.isArray(data) ? data : []);
     }
 
     useEffect(() => {
@@ -269,102 +222,3 @@ export default function Home() {
         </div>
     );
 }
-
-// ================= STYLES =================
-const styles = {
-    app: {
-        minHeight: "100vh",
-        background: "linear-gradient(#121212, #000)",
-        color: "#fff",
-        fontFamily: "Arial",
-        padding: "20px"
-    },
-    header: {
-        display: "flex",
-        justifyContent: "space-between",
-        alignItems: "center",
-        borderBottom: "1px solid #222",
-        paddingBottom: "10px"
-    },
-    brand: { color: "#1DB954", fontWeight: "bold" },
-    logout: {
-        background: "transparent",
-        border: "1px solid #1DB954",
-        color: "#1DB954",
-        padding: "6px 12px",
-        borderRadius: "20px",
-        cursor: "pointer"
-    },
-    tabs: { display: "flex", gap: "10px", margin: "15px 0" },
-    tab: {
-        padding: "8px 14px",
-        borderRadius: "20px",
-        border: "1px solid #1DB954",
-        cursor: "pointer"
-    },
-    grid: { display: "flex", flexDirection: "column", gap: "10px" },
-    card: {
-        display: "flex",
-        alignItems: "center",
-        gap: "10px",
-        background: "#181818",
-        padding: "10px",
-        borderRadius: "10px"
-    },
-    img: { width: "45px", height: "45px", borderRadius: "6px" },
-    info: { flex: 1 },
-    title: { fontWeight: "bold" },
-    artist: { fontSize: "12px", color: "#aaa" },
-    play: {
-        background: "#1DB954",
-        border: "none",
-        borderRadius: "50%",
-        width: "32px",
-        height: "32px",
-        cursor: "pointer"
-    },
-    playlistGrid: {
-        display: "grid",
-        gridTemplateColumns: "repeat(auto-fill, minmax(140px, 1fr))",
-        gap: "12px"
-    },
-    playlistCard: {
-        background: "#181818",
-        padding: "10px",
-        borderRadius: "10px"
-    },
-    playlistImg: {
-        width: "100%",
-        height: "120px",
-        objectFit: "cover",
-        borderRadius: "8px"
-    },
-    playlistName: { marginTop: "8px" },
-    aiCard: {
-        background: "#181818",
-        padding: "10px",
-        borderRadius: "10px",
-        marginTop: "10px"
-    },
-    section: { color: "#1DB954" },
-    loading: { color: "#aaa" },
-    loginPage: {
-        height: "100vh",
-        display: "flex",
-        justifyContent: "center",
-        alignItems: "center",
-        background: "linear-gradient(#000, #121212)"
-    },
-    loginCard: { textAlign: "center" },
-    logo: { fontSize: "32px", color: "#1DB954" },
-    subtitle: { color: "#aaa", marginBottom: "20px" },
-    loginButton: {
-        background: "#1DB954",
-        border: "none",
-        padding: "12px 20px",
-        borderRadius: "25px",
-        fontWeight: "bold",
-        cursor: "pointer"
-    },
-    loginLink: { textDecoration: "none" }
-};

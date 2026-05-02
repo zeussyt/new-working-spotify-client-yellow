@@ -3,10 +3,11 @@ import axios from "axios";
 import cors from "cors";
 import dotenv from "dotenv";
 import { generateCodeVerifier, OAuth2Client } from "@badgateway/oauth2-client";
-import jwt from "jsonwebtoken";
 import cookieParser from "cookie-parser";
 
 dotenv.config({ path: "./.env" });
+
+const app = express();
 
 const scope = [
   "user-read-email",
@@ -19,10 +20,6 @@ const scope = [
   "user-modify-playback-state",
   "streaming"
 ];
-
-const JWT_SECRET = process.env.JWT_SECRET || "dev_secret";
-
-const app = express();
 
 // ================= MIDDLEWARE =================
 
@@ -59,12 +56,11 @@ const client = new OAuth2Client({
 
 // ================= AUTH MIDDLEWARE =================
 
-
 function auth(req, res, next) {
   const token = req.cookies.access_token;
 
   if (!token) {
-    return res.status(401).json({ error: "No token" });
+    return res.status(401).json({ error: "No access token" });
   }
 
   req.accessToken = token;
@@ -98,6 +94,7 @@ app.get("/auth/login", async (req, res) => {
 
   } catch (err) {
     console.error("LOGIN ERROR:", err);
+
     return res.status(500).json({
       error: "Auth login failed",
       details: err.message
@@ -126,13 +123,17 @@ app.get("/auth/callback", async (req, res) => {
       }
     );
 
-    // ✅ STORE SPOTIFY TOKEN DIRECTLY (no JWT)
+    console.log("✅ SPOTIFY TOKEN RECEIVED");
+
+    // Store ONLY Spotify access token
     res.cookie("access_token", tokenSet.accessToken, {
       httpOnly: true,
       secure: true,
       sameSite: "none",
-      path: "/"
+      path: "/",
     });
+
+    res.clearCookie("code_verifier", { path: "/" });
 
     return res.redirect(process.env.FRONTEND_URL);
 
@@ -148,19 +149,31 @@ app.get("/auth/callback", async (req, res) => {
 
 // ================= LOGIN CHECK =================
 
-app.get("/api/me", auth, (req, res) => {
-  return res.json({ loggedIn: true });
+app.get("/api/me", auth, async (req, res) => {
+  try {
+    const me = await axios.get("https://api.spotify.com/v1/me", {
+      headers: {
+        Authorization: `Bearer ${req.accessToken}`
+      }
+    });
+
+    res.json({
+      loggedIn: true,
+      user: me.data
+    });
+
+  } catch (err) {
+    console.error("ME ERROR:", err.response?.data || err.message);
+    res.status(401).json({ loggedIn: false });
+  }
 });
 
 // ================= SEARCH =================
 
 app.get("/api/search", auth, async (req, res) => {
-  console.log("=== SEARCH HIT ===");
-  console.log("AUTH HEADER:", req.headers.authorization);
-  console.log("JWT ACCESS TOKEN:", req.accessToken);
-  const query = req.query.q;
-
   try {
+    const query = req.query.q;
+
     const response = await axios.get(
       "https://api.spotify.com/v1/search",
       {
@@ -174,12 +187,11 @@ app.get("/api/search", auth, async (req, res) => {
         }
       }
     );
+
     res.json(response.data.tracks.items);
 
   } catch (err) {
     console.error("SEARCH ERROR:", err.response?.data || err.message);
-
-    //ALWAYS return array
     res.json([]);
   }
 });
@@ -212,19 +224,15 @@ app.get("/api/library", auth, async (req, res) => {
 
     res.json(items);
 
-  } 
-  //error testing
-  catch (err) {
-  console.error("LIBRARY ERROR:");
-  console.error("Status:", err.response?.status);
-  console.error("Data:", err.response?.data);
+  } catch (err) {
+    console.error("LIBRARY ERROR:", err.response?.data || err.message);
 
-  if (err.response?.status === 401) {
-    return res.status(401).json({ loggedIn: false });
+    if (err.response?.status === 401) {
+      return res.status(401).json({ loggedIn: false });
+    }
+
+    res.json([]);
   }
-
-  res.json([]);
-}
 });
 
 // ================= PLAYLISTS =================
@@ -250,7 +258,7 @@ app.get("/api/playlists", auth, async (req, res) => {
     res.json(playlists);
 
   } catch (err) {
-    console.error(err.response?.data || err.message);
+    console.error("PLAYLISTS ERROR:", err.response?.data || err.message);
     res.json([]);
   }
 });
