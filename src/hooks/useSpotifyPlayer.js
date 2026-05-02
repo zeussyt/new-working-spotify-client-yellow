@@ -15,11 +15,12 @@ export default function useSpotifyPlayer(token) {
         document.body.appendChild(script);
 
         window.onSpotifyWebPlaybackSDKReady = () => {
-            const player = new window.Spotify.Player({
-                name: "Spotify Clone Player",
-                getOAuthToken: cb => cb(token),
-                volume: 0.8
-            });
+        const player = new window.Spotify.Player({
+             name: "Spotify Clone",
+             getOAuthToken: cb => {
+             cb(localStorage.getItem("spotify_access_token"));
+  }
+});
 
             playerRef.current = player;
 

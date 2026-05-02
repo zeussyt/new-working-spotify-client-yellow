@@ -127,7 +127,7 @@ app.get("/auth/callback", async (req, res) => {
 
     // Store ONLY Spotify access token
     res.cookie("access_token", tokenSet.accessToken, {
-      httpOnly: true,
+      httpOnly: false,
       secure: true,
       sameSite: "none",
       path: "/",
@@ -135,7 +135,8 @@ app.get("/auth/callback", async (req, res) => {
 
     res.clearCookie("code_verifier", { path: "/" });
 
-    return res.redirect(process.env.FRONTEND_URL);
+    //possible SDK fix
+    return res.redirect(`${process.env.FRONTEND_URL}?token=${tokenSet.accessToken}`);
 
   } catch (error) {
     console.error("AUTH CALLBACK ERROR:", error);

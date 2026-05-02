@@ -23,7 +23,7 @@ export default function Home() {
     const [playlists, setPlaylists] = useState([]);
     const [aiPlaylists, setAiPlaylists] = useState([]);
 
-    const token = localStorage.getItem("token");
+    const token = localStorage.getItem("spotify_access_token");
     const { play, track } = useSpotifyPlayer(token);
 
     const audioRef = useRef(null);
