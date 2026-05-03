@@ -270,7 +270,7 @@ app.get("/api/playlists", auth, async (req, res) => {
 app.post("/api/playlists/import", async (req, res) => {
     const { playlistId } = req.body;
 
-    const token = req.cookies.access_token; // or however you store auth
+    const token = req.access_token; // or however you store auth
 
     const spotifyRes = await fetch(
         `https://api.spotify.com/v1/playlists/${playlistId}`,
