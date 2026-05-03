@@ -444,7 +444,10 @@ hoverPreview: {
     padding: "12px",
     borderRadius: "12px",
     boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-    zIndex: 999999
+    zIndex: 999999,
+    opacity: 1,
+    transform: "translateY(0)",
+    transition: "opacity 0.15s ease, transform 0.15s ease"
 },
 
 
@@ -452,7 +455,8 @@ hoverImage: {
     width: "80px",
     height: "80px",
     borderRadius: "8px",
-    objectFit: "cover"
+    objectFit: "cover",
+    transition: "transform 0.2s ease"
 },
 
 hoverText: {
