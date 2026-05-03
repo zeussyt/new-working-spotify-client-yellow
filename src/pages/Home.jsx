@@ -30,7 +30,7 @@ export default function Home() {
     const token = localStorage.getItem("spotify_access_token");
     
     //Stop and start functions for the player
-    const { play, pause, resume, next, previous, track, isPlaying } = useSpotifyPlayer(token);
+    const { play, pause, resume, next, previous, track, isPlaying, volume, setVolume } = useSpotifyPlayer(token);
     const audioRef = useRef(null);
 
     // ================= AUTH CHECK (COOKIE BASED) =================
