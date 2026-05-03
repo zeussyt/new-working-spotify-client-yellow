@@ -81,7 +81,8 @@ const styles = {
         background: "#181818",
         display: "flex",
         alignItems: "center",
-        justifyContent: "space-between",
+        justifyContent: "flex-start",
+        gap: "20px",
         padding: "0 20px",
         borderTop: "1px solid #333",
         zIndex: 1000
