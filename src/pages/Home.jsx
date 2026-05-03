@@ -425,7 +425,7 @@ const styles = {
         fontWeight: "bold",
         cursor: "pointer"
     },
-
+/* Bring back if it breaks
     previewPanel: {
     position: "fixed",
     right: "40px",
@@ -437,6 +437,8 @@ const styles = {
     border: "1px solid #1DB954",
     boxShadow: "0 0 20px rgba(0,0,0,0.6)"
 },
+*/
+
 
 previewImg: {
     width: "100%",
