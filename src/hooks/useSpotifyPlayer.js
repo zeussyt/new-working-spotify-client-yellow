@@ -5,6 +5,7 @@ export default function useSpotifyPlayer(token) {
     const [deviceId, setDeviceId] = useState(null);
     const [track, setTrack] = useState(null);
     const [isPlaying, setIsPlaying] = useState(false); 
+    const [volume, setVolume] = useState(0.5);
 
     const playerRef = useRef(null);
 
@@ -132,6 +133,14 @@ export default function useSpotifyPlayer(token) {
             }
         });
     }
+    // ===================== CHANGE VOLUME =====================
+    function changeVolume(v) {
+    setVolume(v);
+
+    if (playerRef.current) {
+        playerRef.current.setVolume(v);
+    }
+}
 
     // ===================== NEXT TRACK =====================
 async function next() {
@@ -171,6 +180,8 @@ async function previous() {
         previous,
         track,
         deviceId,
-        isPlaying 
+        isPlaying,
+        volume,
+        setVolume : changeVolume
     };
 }

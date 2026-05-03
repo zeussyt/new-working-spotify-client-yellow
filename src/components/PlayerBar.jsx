@@ -1,4 +1,4 @@
-export default function PlayerBar({ track, isPlaying, onPlay, onPause, next, previous }) {
+export default function PlayerBar({ track, isPlaying, onPlay, onPause, next, previous, volume, setVolume }) {
     if (!track) return null;
 
     return (
@@ -39,6 +39,21 @@ export default function PlayerBar({ track, isPlaying, onPlay, onPause, next, pre
                 >
                     {isPlaying ? "⏸" : "▶"}
                 </button>
+
+                    {/* volume */}
+                <div style={styles.volumeContainer}>
+                <span style={{ fontSize: "12px" }}>🔊</span>
+
+                    <input
+                        type="range"
+                        min="0"
+                        max="1"
+                        step="0.01"
+                        value={volume ?? 0.5}
+                        onChange={(e) => setVolume(Number(e.target.value))}
+                        style={styles.slider}
+    />
+                    </div>
 
                 {/* skip button */}
                 <button
@@ -104,5 +119,17 @@ const styles = {
         cursor: "pointer",
         fontSize: "16px",
         color: "#fff"
-    }
+    },
+
+    volumeContainer: {
+    display: "flex",
+    alignItems: "center",
+    gap: "8px",
+    marginLeft: "20px"
+},
+
+slider: {
+    width: "100px",
+    cursor: "pointer"
+}
 };

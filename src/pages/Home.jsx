@@ -302,6 +302,8 @@ useEffect(() => {
                             onPlay={resume}
                             next={next}
                             previous={previous}
+                            volume={volume}
+                            setVolume={setVolume}
                                                 />}
         </div>
     );
