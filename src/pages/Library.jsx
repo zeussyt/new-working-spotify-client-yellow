@@ -105,7 +105,12 @@ export default function Library({ playTrack }) {
                     transform: isHovered ? "scale(1)" : "scale(0.8)",
                     transition: "all 0.2s ease"
                 }}
-                onClick={() => playTrack?.(track.uri)}
+                onClick={() => {
+                    const uris = tracks.map(t => t.uri);
+                    playTrack?.(track.uri, uris);
+                    }}
+                //also revert this v
+                //onClick={() => playTrack?.(track.uri)}
             >
                 ▶
             </button>

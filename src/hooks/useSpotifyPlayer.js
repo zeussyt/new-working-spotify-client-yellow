@@ -93,6 +93,8 @@ export default function useSpotifyPlayer(token) {
             console.log("Player not ready");
             return;
         }
+        //logic to help with queueing multiple songs 
+        const queue = uris.length > 0 ? uris : [uri];
 
         await fetch(
             `https://api.spotify.com/v1/me/player/play?device_id=${deviceId}`,

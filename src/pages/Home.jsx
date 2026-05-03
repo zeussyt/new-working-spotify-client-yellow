@@ -250,7 +250,10 @@ useEffect(() => {
                                         //Testing to see if buttons work
                                         onClick={() => {
                                         console.log("CLICKED:", track.name);
-                                        play(track.uri);
+                                        const uris = tracks.map(t => t.uri); 
+                                        play(track.uri, uris);
+                                    // revert to this v if shit hits the fan
+                                       // play(track.uri);
 }}
                                     >
                                         ▶
