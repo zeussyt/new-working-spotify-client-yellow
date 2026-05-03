@@ -40,7 +40,20 @@ export default function PlayerBar({ track, isPlaying, onPlay, onPause, next, pre
                     {isPlaying ? "⏸" : "▶"}
                 </button>
 
-                    {/* volume */}
+                    
+
+                {/* skip button */}
+                <button
+                    style={styles.sideButton}
+                    onClick={() => {
+                        console.log("NEXT CLICKED");
+                        next();
+                    }}
+                >
+                    ⏭
+                </button>
+
+                {/* volume */}
                 <div style={styles.volumeContainer}>
                 <span style={{ fontSize: "12px" }}>🔊</span>
 
@@ -54,17 +67,6 @@ export default function PlayerBar({ track, isPlaying, onPlay, onPause, next, pre
                         style={styles.slider}
     />
                     </div>
-
-                {/* skip button */}
-                <button
-                    style={styles.sideButton}
-                    onClick={() => {
-                        console.log("NEXT CLICKED");
-                        next();
-                    }}
-                >
-                    ⏭
-                </button>
 
             </div>
         </div>
