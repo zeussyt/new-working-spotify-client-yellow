@@ -133,10 +133,42 @@ export default function useSpotifyPlayer(token) {
         });
     }
 
+    // ===================== NEXT TRACK =====================
+async function next() {
+    if (!deviceId) {
+        console.log("No active device");
+        return;
+    }
+
+    await fetch("https://api.spotify.com/v1/me/player/next", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
+
+// ===================== PREVIOUS TRACK =====================
+async function previous() {
+    if (!deviceId) {
+        console.log("No active device");
+        return;
+    }
+
+    await fetch("https://api.spotify.com/v1/me/player/previous", {
+        method: "POST",
+        headers: {
+            Authorization: `Bearer ${token}`
+        }
+    });
+}
+
     return {
         play,
         pause,
         resume,
+        next,
+        previous,
         track,
         deviceId,
         isPlaying 
