@@ -192,27 +192,7 @@ useEffect(() => {
                 {activeTab === "search" && (
                     
                     <>
-                    
-                    {hoveredTrack && (
-    <div style={styles.previewPanel}>
-        <img
-            src={hoveredTrack.album?.images?.[0]?.url}
-            style={styles.previewImg}
-        />
-
-        <div>
-            <h2>{hoveredTrack.name}</h2>
-            <p>{hoveredTrack.artists?.[0]?.name}</p>
-        </div>
-
-        <button
-            style={styles.previewPlay}
-            onClick={() => playTrack(hoveredTrack.uri)}
-        >
-            ▶ Play
-        </button>
-    </div>
-)}
+ 
                         <Search onSearch={handleSearch} />
                         {loading && <div style={styles.loading}>Loading...</div>}
 
@@ -453,7 +433,7 @@ previewPlay: {
     cursor: "pointer",
     width: "100%"
 },
-/*
+
 hoverPreview: {
     position: "fixed",
     bottom: "100px",
@@ -464,10 +444,9 @@ hoverPreview: {
     padding: "12px",
     borderRadius: "12px",
     boxShadow: "0 10px 30px rgba(0,0,0,0.5)",
-
-    zIndex: 999999   
+    zIndex: 999999
 },
-*/
+
 
 hoverImage: {
     width: "80px",
