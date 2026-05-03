@@ -266,6 +266,35 @@ app.get("/api/playlists", auth, async (req, res) => {
   }
 });
 
+// ================= PLAYLIST IMPORT =================
+app.post("/api/playlists/import", async (req, res) => {
+    const { playlistId } = req.body;
+
+    const token = req.cookies.access_token; // or however you store auth
+
+    const spotifyRes = await fetch(
+        `https://api.spotify.com/v1/playlists/${playlistId}`,
+        {
+            headers: {
+                Authorization: `Bearer ${token}`
+            }
+        }
+    );
+
+    const data = await spotifyRes.json();
+
+    const playlist = {
+        id: data.id,
+        name: data.name,
+        image: data.images?.[0]?.url
+    };
+
+    // store in DB (pseudo)
+    await db.playlists.insert(playlist);
+
+    res.json(playlist);
+});
+
 // ================= START =================
 
 const PORT = process.env.PORT || 3001;

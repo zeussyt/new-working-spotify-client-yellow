@@ -93,6 +93,47 @@ export default function Home() {
         setPlaylists([]);
         setAiPlaylists([]);
     }
+    //playlist import function
+    async function importPlaylist() {
+    const input = document.getElementById("playlistInput");
+    const url = input.value.trim();
+
+    if (!url) return;
+
+    // ================= EXTRACT PLAYLIST ID =================
+    const match = url.match(/playlist\/([a-zA-Z0-9]+)/);
+
+    if (!match) {
+        alert("Invalid Spotify playlist URL");
+        return;
+    }
+
+    const playlistId = match[1];
+
+    try {
+        const res = await fetch(`${API}/api/playlists/import`, {
+            method: "POST",
+            headers: {
+                "Content-Type": "application/json"
+            },
+            credentials: "include",
+            body: JSON.stringify({ playlistId })
+        });
+
+        if (!res.ok) throw new Error("Failed to import playlist");
+
+        const data = await res.json();
+
+        // refresh playlists UI
+        setPlaylists(prev => [...prev, data]);
+
+        input.value = "";
+
+    } catch (err) {
+        console.error(err);
+        alert("Import failed");
+    }
+}
 
     // ================= DATA LOADERS =================
     async function loadPlaylists() {
@@ -248,25 +289,47 @@ useEffect(() => {
                 )}
 
                 {activeTab === "playlists" && (
-                    <div>
-                        <h2 style={styles.section}>Your Playlists</h2>
+    <div>
+        <h2 style={styles.section}>Your Playlists</h2>
 
-                        <div style={styles.playlistGrid}>
-                            {playlists.map(p => (
-                                <div key={p.id} style={styles.playlistCard}>
-                                    <img src={p.image} style={styles.playlistImg} />
-                                    <div style={styles.playlistName}>{p.name}</div>
-                                </div>
-                            ))}
-                        </div>
-                    </div>
-                )}
-                {activeTab === "library" && (
-                   <Library
-                            playTrack={play}
-                            onHover={setHoveredTrack}   
-                    />
-                )}
+        {/* ================= IMPORT PLAYLIST UI ================= */}
+        <div style={{ marginBottom: "15px", display: "flex", gap: "10px" }}>
+            <input
+                placeholder="Paste Spotify playlist link"
+                id="playlistInput"
+                style={{
+                    padding: "8px",
+                    borderRadius: "8px",
+                    border: "1px solid #333",
+                    flex: 1
+                }}
+            />
+
+            <button
+                style={{
+                    background: "#1DB954",
+                    border: "none",
+                    padding: "8px 12px",
+                    borderRadius: "8px",
+                    cursor: "pointer"
+                }}
+                onClick={importPlaylist}
+            >
+                Import
+            </button>
+        </div>
+
+        {/* ================= EXISTING PLAYLIST GRID ================= */}
+        <div style={styles.playlistGrid}>
+            {playlists.map(p => (
+                <div key={p.id} style={styles.playlistCard}>
+                    <img src={p.image} style={styles.playlistImg} />
+                    <div style={styles.playlistName}>{p.name}</div>
+                </div>
+            ))}
+        </div>
+    </div>
+)}
 
                 {activeTab === "ai" && (
                     <div style={styles.section}>
