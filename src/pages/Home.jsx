@@ -227,6 +227,9 @@ useEffect(() => {
                                                  === track.id ? 
                                                  "scale(1.03)" : "scale(1)",
                                                 transition: "0.15s ease",
+                                                zIndex: hoveredTrack?.id === track.id 
+                                                ? 999   // ✅ BRING TO FRONT
+                                                : 0,
                                                 border: hoveredTrack?.id 
                                                 === track.id ? 
                                                 "1px solid #1DB954" : "1px solid transparent"
@@ -355,12 +358,12 @@ const styles = {
         border: "1px solid #1DB954",
         cursor: "pointer"
     },
-    grid: { display: "flex", flexDirection: "column", gap: "10px" },
+    grid: { display: "flex", flexDirection: "column", gap: "10px", position: "relative", overflow: "visible" },
     card: {
         display: "flex",
         //make go up
         position: "relative",
-        zIndex: 1,
+        zIndex: 0,
         alignItems: "center",
         gap: "10px",
         background: "#181818",
