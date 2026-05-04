@@ -156,19 +156,19 @@ useEffect(() => {
 
                     <div style={styles.member}>
                         
-                        <img src="/noah_project.jpg" style={styles.avatar} />
+                        <img src="/public/noah_project.jpg" style={styles.avatar} />
                         <div style={styles.name}>Noah Cross</div>
                         
                     </div>
 
                     <div style={styles.member}>
-                        <img src="/ian_project.jpg" style={styles.avatar} />
+                        <img src="/public/ian_project.jpg" style={styles.avatar} />
                         <div style={styles.name}>Ian Campbell</div>
                         
                     </div>
 
                     <div style={styles.member}>
-                        <img src="/spenser_project.jpg" style={styles.avatar} />
+                        <img src="/public/spenser_project.jpg" style={styles.avatar} />
                         <div style={styles.name}>Spenser Catchpole</div>
                         
                     </div>
