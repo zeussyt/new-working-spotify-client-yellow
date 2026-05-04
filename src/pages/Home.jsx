@@ -155,24 +155,22 @@ useEffect(() => {
                     <div style={styles.team}>
 
                     <div style={styles.member}>
+                        
                         <img src="/noah_project.jpg" style={styles.avatar} />
                         <div style={styles.name}>Noah Cross</div>
-                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.08)"}
-                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                        
                     </div>
 
                     <div style={styles.member}>
                         <img src="/ian_project.jpg" style={styles.avatar} />
                         <div style={styles.name}>Ian Campbell</div>
-                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.08)"}
-                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                        
                     </div>
 
                     <div style={styles.member}>
                         <img src="/spenser_project.jpg" style={styles.avatar} />
                         <div style={styles.name}>Spenser Catchpole</div>
-                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.08)"}
-                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                        
                     </div>
 
                 </div>
