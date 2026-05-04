@@ -153,18 +153,29 @@ useEffect(() => {
 
                     {/* ================= TEAM ================= */}
                     <div style={styles.team}>
-                        <div style={styles.member}>
-                            <img src="/noah_project.jpg" style={styles.avatar} />
-                            <img src="/ian_project.jpg" style={styles.avatar} />
-                            <img src="/spenser_project.jpg" style={styles.avatar} />
-                            <div>Noah Cross, Ian Campbell, Spenser Catchpole</div>
-                        </div>
 
-                        <div style={styles.member}>
-                            <img src="/bio2.jpg" style={styles.avatar} />
-                            <div>Teammate Name</div>
-                        </div>
+                    <div style={styles.member}>
+                        <img src="/noah_project.jpg" style={styles.avatar} />
+                        <div style={styles.name}>Noah Cross</div>
+                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.08)"}
+                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
                     </div>
+
+                    <div style={styles.member}>
+                        <img src="/ian_project.jpg" style={styles.avatar} />
+                        <div style={styles.name}>Ian Campbell</div>
+                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.08)"}
+                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                    </div>
+
+                    <div style={styles.member}>
+                        <img src="/spenser_project.jpg" style={styles.avatar} />
+                        <div style={styles.name}>Spenser Catchpole</div>
+                        onMouseEnter={e => e.currentTarget.style.transform = "scale(1.08)"}
+                        onMouseLeave={e => e.currentTarget.style.transform = "scale(1)"}
+                    </div>
+
+                </div>
 
                     {/* ================= LINKS ================= */}
                     <div style={styles.links}>
@@ -524,24 +535,38 @@ meta: {
 team: {
     display: "flex",
     justifyContent: "center",
-    gap: "20px",
-    marginBottom: "20px"
+    alignItems: "center",
+    gap: "30px",
+    marginBottom: "25px",
+    flexWrap: "wrap" // ✅ responsive
 },
 
 member: {
     display: "flex",
+    cursor: "pointer",
     flexDirection: "column",
     alignItems: "center",
-    fontSize: "12px"
+    background: "#181818",
+    padding: "10px",
+    borderRadius: "12px",
+    width: "100px",
+    transition: "0.2s ease"
 },
 
 avatar: {
-    width: "60px",
-    height: "60px",
+    width: "70px",
+    height: "70px",
     borderRadius: "50%",
     objectFit: "cover",
-    marginBottom: "6px",
+    marginBottom: "8px",
     border: "2px solid #1DB954"
+},
+
+name: {
+    fontSize: "12px",
+    color: "#fff",
+    textAlign: "center",
+    fontWeight: "bold"
 },
 
 links: {
