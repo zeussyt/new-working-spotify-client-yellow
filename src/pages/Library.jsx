@@ -6,9 +6,7 @@ export default function Library({ playTrack }) {
     const [loading, setLoading] = useState(true);
     const [hoveredId, setHoveredId] = useState(null);
 
-    useEffect(() => {
-        loadLibrary();
-    }, []);
+    
 
     async function loadLibrary() {
         setLoading(true);
@@ -28,6 +26,10 @@ export default function Library({ playTrack }) {
             setLoading(false);
         }
     }
+    
+    useEffect(() => {
+        loadLibrary();
+    }, []);
 
     if (loading) {
         return (
