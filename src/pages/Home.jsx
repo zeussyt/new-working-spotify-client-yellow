@@ -145,6 +145,45 @@ useEffect(() => {
                 <div style={styles.loginCard}>
                     <h1 style={styles.logo}>Spotify Clone</h1>
                     <p style={styles.subtitle}>Connect to your music</p>
+                    <p style={styles.subtitle}>Project ID: SP-27-YELLOW</p>
+
+                    <p style={styles.meta}>
+                        CS 4850 • Spring 2026
+                    </p>
+
+                    {/* ================= TEAM ================= */}
+                    <div style={styles.team}>
+                        <div style={styles.member}>
+                            <img src="/noah_project.jpg" style={styles.avatar} />
+                            <img src="/ian_project.jpg" style={styles.avatar} />
+                            <img src="/spenser_project.jpg" style={styles.avatar} />
+                            <div>Noah Cross, Ian Campbell, Spenser Catchpole</div>
+                        </div>
+
+                        <div style={styles.member}>
+                            <img src="/bio2.jpg" style={styles.avatar} />
+                            <div>Teammate Name</div>
+                        </div>
+                    </div>
+
+                    {/* ================= LINKS ================= */}
+                    <div style={styles.links}>
+                        <a
+                            href="/final-report.pdf"
+                            target="_blank"
+                            style={styles.linkBtn}
+                        >
+                            📄 Final Report
+                        </a>
+
+                        <a
+                            href="https://github.com/zeussyt/new-working-spotify-client-yellow"
+                            target="_blank"
+                            style={styles.linkBtn}
+                        >
+                            💻 GitHub Repo
+                        </a>
+                    </div>
 
                     <a href={`${API}/auth/login`} style={styles.loginLink}>
                         <button style={styles.loginButton}>
@@ -475,6 +514,53 @@ hoverArtist: {
     fontSize: "12px",
     color: "#aaa"
 },
+
+meta: {
+    color: "#888",
+    fontSize: "14px",
+    marginBottom: "15px"
+},
+
+team: {
+    display: "flex",
+    justifyContent: "center",
+    gap: "20px",
+    marginBottom: "20px"
+},
+
+member: {
+    display: "flex",
+    flexDirection: "column",
+    alignItems: "center",
+    fontSize: "12px"
+},
+
+avatar: {
+    width: "60px",
+    height: "60px",
+    borderRadius: "50%",
+    objectFit: "cover",
+    marginBottom: "6px",
+    border: "2px solid #1DB954"
+},
+
+links: {
+    display: "flex",
+    gap: "10px",
+    justifyContent: "center",
+    marginBottom: "20px"
+},
+
+linkBtn: {
+    background: "#222",
+    color: "#fff",
+    padding: "8px 12px",
+    borderRadius: "20px",
+    textDecoration: "none",
+    border: "1px solid #444",
+    fontSize: "12px"
+},
+
     loginLink: { textDecoration: "none" }
 
     
