@@ -194,6 +194,15 @@ useEffect(() => {
                         </a>
                     </div>
 
+                    <a
+                            href="https://github.com/zeussyt/new-working-spotify-client-yellow"
+                            target="_blank"
+                            style={styles.linkBtn}
+                        >
+                            🎥 Presentation and Demo
+                        </a>
+                    </div>
+
                     <a href={`${API}/auth/login`} style={styles.loginLink}>
                         <button style={styles.loginButton}>
                             Login with Spotify
