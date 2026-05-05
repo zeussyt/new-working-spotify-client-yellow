@@ -16,7 +16,7 @@ export default function Library({ playTrack }) {
 
             const data = await res.json();
 
-            console.log("LIBRARY (10 songs):", data);
+            console.log("LIBRARY:", data);
 
             setTracks(Array.isArray(data) ? data : []);
         } catch (err) {

@@ -178,7 +178,7 @@ useEffect(() => {
                     {/* ================= LINKS ================= */}
                     <div style={styles.links}>
                         <a
-                            href="/final-report.pdf"
+                            href="/Final_Report_SP_27_Yellow.pdf"
                             target="_blank"
                             style={styles.linkBtn}
                         >
