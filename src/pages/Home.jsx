@@ -201,7 +201,7 @@ useEffect(() => {
                         >
                             🎥 Presentation and Demo
                         </a>
-                    </div>
+                   
 
                     <a href={`${API}/auth/login`} style={styles.loginLink}>
                         <button style={styles.loginButton}>
