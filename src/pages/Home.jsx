@@ -194,7 +194,7 @@ useEffect(() => {
                         </a>
 
                          <a
-                            href="https://github.com/zeussyt/new-working-spotify-client-yellow"
+                            href="https://youtu.be/HYb9FLLjkDs"
                             target="_blank"
                             style={styles.linkBtn}
                         >
