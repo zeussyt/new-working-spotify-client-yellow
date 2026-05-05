@@ -145,6 +145,7 @@ useEffect(() => {
                 <div style={styles.loginCard}>
                     <h1 style={styles.logo}>Spotify Clone</h1>
                     <p style={styles.subtitle}>Connect to your music</p>
+                    <p style={styles.subtitle}>Professor, in order to log in, I have to add you into our Spotify App Dashboard. Text me when you are trying to log in and I will set you up!</p>
                     <p style={styles.subtitle}>Project ID: SP-27-YELLOW</p>
 
                     <p style={styles.meta}>
